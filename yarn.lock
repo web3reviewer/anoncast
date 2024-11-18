@@ -24,6 +24,7 @@ __metadata:
   resolution: "@anon/api@workspace:packages/api"
   dependencies:
     "@anon/circuits": "npm:*"
+    "@anon/db": "npm:*"
     "@elysiajs/cors": "npm:^1.1.1"
     "@noir-lang/backend_barretenberg": "npm:^0.17.0"
     "@noir-lang/noir_js": "npm:^0.17.0"

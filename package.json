@@ -7,8 +7,10 @@
 		"apps/*"
 	],
 	"scripts": {
+		"build": "yarn workspaces foreach --all --exclude @anon/next --topological-dev run build",
 		"next:dev": "yarn workspace @anon/next dev",
 		"api:dev": "yarn workspace @anon/api dev",
+		"api:start": "yarn workspace @anon/api start",
 		"db:push": "yarn workspace @anon/db push"
 	}
 }
