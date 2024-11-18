@@ -1,8 +1,13 @@
 {
-  "name": "anon",
-  "packageManager": "yarn@4.4.0",
-  "private": true,
-  "workspaces": [
-    "packages/*"
-  ]
+	"name": "anon",
+	"packageManager": "yarn@4.4.0",
+	"private": true,
+	"workspaces": [
+		"packages/*",
+		"apps/*"
+	],
+	"scripts": {
+		"next:dev": "yarn workspace @anon/next dev",
+		"api:dev": "yarn workspace @anon/api dev"
+	}
 }
