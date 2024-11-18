@@ -27,12 +27,38 @@ import {
 } from "../ui/dialog";
 import { Input } from "../ui/input";
 import { useQuery } from "@tanstack/react-query";
-import { ANON_ADDRESS } from "@/lib/utils";
 import { GetCastResponse } from "@/lib/types";
+import { useBalance } from "@/hooks/use-balance";
+import { TOKEN_CONFIG } from "@anon/api/lib/config";
+import { formatUnits } from "viem";
 
-export function CreatePost() {
+export function CreatePost({ tokenAddress }: { tokenAddress: string }) {
+	const { data } = useBalance(tokenAddress);
+
+	console.log(data);
+	if (data === undefined) return null;
+
+	const minAmount = TOKEN_CONFIG[tokenAddress].minAmount;
+	const difference = BigInt(minAmount) - data;
+
+	if (difference > 0)
+		return (
+			<a
+				href={`https://app.uniswap.org/swap?outputCurrency=${tokenAddress}&chain=base`}
+				target="_blank"
+				rel="noreferrer"
+			>
+				<div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded flex flex-row items-center justify-between gap-2">
+					<p className="font-bold">{`Not enough tokens to post. Buy ${formatUnits(
+						difference,
+						18,
+					)} more.`}</p>
+				</div>
+			</a>
+		);
+
 	return (
-		<CreatePostProvider tokenAddress={ANON_ADDRESS}>
+		<CreatePostProvider tokenAddress={tokenAddress}>
 			<CreatePostForm />
 		</CreatePostProvider>
 	);

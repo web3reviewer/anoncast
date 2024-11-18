@@ -3,6 +3,7 @@
 import { ConnectButton } from "@/components/connect-button";
 import { CreatePost } from "@/components/create-post";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { ANON_ADDRESS } from "@anon/api/lib/config";
 import { VenetianMask } from "lucide-react";
 
 export default function Home() {
@@ -24,7 +25,7 @@ export default function Home() {
 					this up in the future.
 				</AlertDescription>
 			</Alert>
-			<CreatePost />
+			<CreatePost tokenAddress={ANON_ADDRESS} />
 		</div>
 	);
 }

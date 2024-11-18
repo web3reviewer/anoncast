@@ -1,26 +1,21 @@
 "use client";
 
-import { ANON_ADDRESS } from "@/lib/utils";
+import { USERNAME_TO_ADDRESS } from "@anon/api/lib/config";
 import { NeynarAuthButton, NeynarContextProvider, Theme } from "@neynar/react";
 import { INeynarAuthenticatedUser } from "@neynar/react/dist/types/common";
-
-const usernameToAddress: Record<string, string> = {
-	anoncast: ANON_ADDRESS,
-	comment: "0x0000000000000000000000000000000000000000",
-};
 
 export default function SignIn() {
 	const handleSuccess = async ({
 		user,
 	}: { user: INeynarAuthenticatedUser }) => {
-		if (!usernameToAddress[user.username]) {
+		if (!USERNAME_TO_ADDRESS[user.username]) {
 			return;
 		}
 
 		await fetch(`${process.env.NEXT_PUBLIC_API_URL}/update-signer`, {
 			method: "POST",
 			body: JSON.stringify({
-				address: usernameToAddress[user.username],
+				address: USERNAME_TO_ADDRESS[user.username],
 				signerUuid: user.signer_uuid,
 			}),
 		});
