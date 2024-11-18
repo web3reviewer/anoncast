@@ -1,7 +1,15 @@
 import { Button } from "../ui/button";
 import { Textarea } from "../ui/textarea";
 import { CreatePostProvider, useCreatePost } from "./context";
-import { Image, Link, Loader2, Quote, Reply, X } from "lucide-react";
+import {
+	ExternalLink,
+	Image,
+	Link,
+	Loader2,
+	Quote,
+	Reply,
+	X,
+} from "lucide-react";
 import {
 	Tooltip,
 	TooltipContent,
@@ -19,18 +27,19 @@ import {
 } from "../ui/dialog";
 import { Input } from "../ui/input";
 import { useQuery } from "@tanstack/react-query";
-import { GetCastResponse } from "@/app/api/get-cast/route";
+import { ANON_ADDRESS } from "@/lib/utils";
+import { GetCastResponse } from "@/lib/types";
 
 export function CreatePost() {
 	return (
-		<CreatePostProvider>
+		<CreatePostProvider tokenAddress={ANON_ADDRESS}>
 			<CreatePostForm />
 		</CreatePostProvider>
 	);
 }
 
 function CreatePostForm() {
-	const { text, setText, createPost } = useCreatePost();
+	const { text, setText, createPost, state } = useCreatePost();
 
 	return (
 		<div className="flex flex-col gap-4">
@@ -54,10 +63,38 @@ function CreatePostForm() {
 				<Button
 					onClick={createPost}
 					className="font-bold text-md rounded-xl hover:scale-105 transition-all duration-300"
+					disabled={!["idle", "success", "error"].includes(state.status)}
 				>
-					Post
+					{state.status === "posting" ? (
+						<div className="flex flex-row items-center gap-2">
+							<Loader2 className="animate-spin" />
+							<p>Posting</p>
+						</div>
+					) : state.status === "generating" ? (
+						<div className="flex flex-row items-center gap-2">
+							<Loader2 className="animate-spin" />
+							<p>Generating proof</p>
+						</div>
+					) : (
+						"Post"
+					)}
 				</Button>
 			</div>
+			{state.status === "success" && (
+				<a
+					href={`https://warpcast.com/~/conversations/${state.post.cast.hash}`}
+					target="_blank"
+					rel="noreferrer"
+				>
+					<div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded flex flex-row items-center justify-between gap-2">
+						<p className="font-bold">Posted!</p>
+						<div className="flex flex-row items-center gap-2">
+							<p>View on Warpcast</p>
+							<ExternalLink size={16} />
+						</div>
+					</div>
+				</a>
+			)}
 		</div>
 	);
 }
@@ -294,7 +331,9 @@ function ParentCast() {
 	const handleSetParent = async () => {
 		setLoading(true);
 		if (value) {
-			const response = await fetch(`/api/get-cast?identifier=${value}`);
+			const response = await fetch(
+				`${process.env.NEXT_PUBLIC_API_URL}/get-cast?identifier=${value}`,
+			);
 			const data: GetCastResponse = await response.json();
 			setParent(data ?? null);
 		}
@@ -386,7 +425,9 @@ function QuoteCast() {
 	const handleSetQuote = async () => {
 		setLoading(true);
 		if (value) {
-			const response = await fetch(`/api/get-cast?identifier=${value}`);
+			const response = await fetch(
+				`${process.env.NEXT_PUBLIC_API_URL}/get-cast?identifier=${value}`,
+			);
 			const data: GetCastResponse = await response.json();
 			setQuote(data ?? null);
 		}

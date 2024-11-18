@@ -1,7 +1,20 @@
-import { GetCastResponse } from "@/app/api/get-cast/route";
+import { GetCastResponse, PostCastResponse } from "@/lib/types";
 import { createProof } from "@anon/api/lib/proof";
 import { createContext, useContext, useState, ReactNode } from "react";
 import { useAccount } from "wagmi";
+
+type State =
+	| {
+			status: "idle" | "generating" | "posting";
+	  }
+	| {
+			status: "success";
+			post: PostCastResponse;
+	  }
+	| {
+			status: "error";
+			error: string;
+	  };
 
 interface CreatePostContextProps {
 	text: string | null;
@@ -18,13 +31,20 @@ interface CreatePostContextProps {
 	setParent: (parent: GetCastResponse | null) => void;
 	createPost: () => Promise<void>;
 	embedCount: number;
+	state: State;
 }
 
 const CreatePostContext = createContext<CreatePostContextProps | undefined>(
 	undefined,
 );
 
-export const CreatePostProvider = ({ children }: { children: ReactNode }) => {
+export const CreatePostProvider = ({
+	tokenAddress,
+	children,
+}: {
+	tokenAddress: string;
+	children: ReactNode;
+}) => {
 	const { address } = useAccount();
 	const [text, setText] = useState<string | null>(null);
 	const [image, setImage] = useState<string | null>(null);
@@ -32,33 +52,53 @@ export const CreatePostProvider = ({ children }: { children: ReactNode }) => {
 	const [quote, setQuote] = useState<GetCastResponse | null>(null);
 	const [channel, setChannel] = useState<string | null>(null);
 	const [parent, setParent] = useState<GetCastResponse | null>(null);
+	const [state, setState] = useState<State>({ status: "idle" });
+	const [post, setPost] = useState<PostCastResponse | null>(null);
 
 	const createPost = async () => {
 		if (!address) return;
 
-		const embeds = [image, embed].filter((e) => e !== null) as string[];
+		setState({ status: "generating" });
+		try {
+			const embeds = [image, embed].filter((e) => e !== null) as string[];
+			const proof = await createProof({
+				address,
+				text,
+				embeds,
+				quote: quote?.cast?.hash ?? null,
+				channel,
+				parent: parent?.cast?.hash ?? null,
+				tokenAddress,
+			});
+			if (!proof) {
+				setState({ status: "error", error: "Not allowed to post" });
+				return;
+			}
 
-		const proof = await createProof(address, {
-			text: text ?? "",
-			embeds,
-			quote: quote?.cast?.hash ?? "",
-			channel: channel ?? "",
-			parent: parent?.cast?.hash ?? "",
-		});
-		if (!proof) {
-			return;
+			setState({ status: "posting" });
+
+			const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/post`, {
+				method: "POST",
+				body: JSON.stringify({
+					proof: Array.from(proof.proof),
+					publicInputs: proof.publicInputs.map((i) => Array.from(i)),
+				}),
+				headers: {
+					"Content-Type": "application/json",
+				},
+			});
+
+			const data: PostCastResponse = await response.json();
+			if (data.success) {
+				setPost(data);
+				setState({ status: "success", post: data });
+			} else {
+				setState({ status: "error", error: "Failed to post" });
+			}
+		} catch (e) {
+			setState({ status: "error", error: "Failed to post" });
+			console.error(e);
 		}
-
-		await fetch(`${process.env.NEXT_PUBLIC_API_URL}/post`, {
-			method: "POST",
-			body: JSON.stringify({
-				proof: Array.from(proof.proof),
-				publicInputs: proof.publicInputs.map((i) => Array.from(i)),
-			}),
-			headers: {
-				"Content-Type": "application/json",
-			},
-		});
 	};
 
 	const embedCount = [image, embed, quote].filter((e) => e !== null).length;
@@ -80,6 +120,7 @@ export const CreatePostProvider = ({ children }: { children: ReactNode }) => {
 				setParent,
 				embedCount,
 				createPost,
+				state,
 			}}
 		>
 			{children}

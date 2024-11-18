@@ -11,6 +11,9 @@
 	"dependencies": {
 		"@anon/api": "*",
 		"@anon/circuits": "*",
+		"@anon/db": "*",
+		"@neynar/nodejs-sdk": "^1.71.0",
+		"@neynar/react": "^0.9.7",
 		"@noir-lang/backend_barretenberg": "^0.17.0",
 		"@noir-lang/noir_js": "^0.17.0",
 		"@radix-ui/react-dialog": "^1.1.2",

@@ -6,18 +6,45 @@ import { fetchTopOwners, Owner } from "../lib/simplehash";
 import { verifyProof } from "../lib/proof";
 import cors from "@elysiajs/cors";
 import { Logestic } from "logestic";
+import { createSignerForAddress, getSignerForAddress } from "@anon/db";
+import { GetCastResponse, PostCastResponse } from "./types";
+
+const zeroHex = "0x0000000000000000000000000000000000000000";
 
 const redis = new Redis(process.env.REDIS_URL as string);
 
 const app = new Elysia()
 	.use(cors().use(Logestic.preset("common")))
-	.get("/merkle-tree", fetchTree)
+	.get(
+		"/merkle-tree/:tokenAddress",
+		({ params }) => fetchTree(params.tokenAddress),
+		{
+			params: t.Object({
+				tokenAddress: t.String(),
+			}),
+		},
+	)
 	.post("/post", ({ body }) => submitPost(body.proof, body.publicInputs), {
 		body: t.Object({
 			proof: t.Array(t.Number()),
 			publicInputs: t.Array(t.Array(t.Number())),
 		}),
-	});
+	})
+	.get("/get-cast", ({ query }) => getCast(query.identifier), {
+		query: t.Object({
+			identifier: t.String(),
+		}),
+	})
+	.post(
+		"/update-signer",
+		({ body }) => createSignerForAddress(body.address, body.signerUuid),
+		{
+			body: t.Object({
+				address: t.String(),
+				signerUuid: t.String(),
+			}),
+		},
+	);
 
 app.listen(3001);
 
@@ -25,8 +52,8 @@ console.log(
 	`🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`,
 );
 
-async function fetchTree() {
-	const data = await redis.get("anon:tree");
+async function fetchTree(tokenAddress: string) {
+	const data = await redis.get(`anon:tree:${tokenAddress}`);
 	if (data) {
 		return JSON.parse(data);
 	}
@@ -34,7 +61,7 @@ async function fetchTree() {
 	const mimc = await buildMimc();
 	const merkleTree = new MerkleTreeMiMC(11, mimc);
 
-	const owners = await fetchOwners();
+	const owners = await fetchOwners(tokenAddress);
 	for (const owner of owners) {
 		const commitment = MiMC7(
 			mimc,
@@ -59,19 +86,29 @@ async function fetchTree() {
 		elements,
 	};
 
-	await redis.set("anon:tree", JSON.stringify(tree), "EX", 60 * 5);
+	await redis.set(
+		`anon:tree:${tokenAddress}`,
+		JSON.stringify(tree),
+		"EX",
+		60 * 5,
+	);
 
 	return tree;
 }
 
-async function fetchOwners(): Promise<Array<Owner>> {
-	const data = await redis.get("anon:owners");
+async function fetchOwners(tokenAddress: string): Promise<Array<Owner>> {
+	const data = await redis.get(`anon:owners:${tokenAddress}`);
 	if (data) {
 		return JSON.parse(data);
 	}
 
-	const owners = await fetchTopOwners();
-	await redis.set("anon:owners", JSON.stringify(owners), "EX", 60 * 5);
+	const owners = await fetchTopOwners(tokenAddress);
+	await redis.set(
+		`anon:owners:${tokenAddress}`,
+		JSON.stringify(owners),
+		"EX",
+		60 * 5,
+	);
 
 	return owners;
 }
@@ -88,7 +125,52 @@ async function submitPost(proof: number[], publicInputs: number[][]) {
 		throw new Error("Invalid proof");
 	}
 
-	return extractData(publicInputs);
+	const params = extractData(publicInputs);
+
+	const signerUuid = await getSignerForAddress(params.tokenAddress);
+
+	const embeds: Array<{
+		url?: string;
+		castId?: { hash: string; fid: number };
+	}> = params.embeds.map((embed) => ({
+		url: embed,
+	}));
+
+	if (params.quote) {
+		const quote = await getCast(params.quote);
+		embeds.push({
+			castId: {
+				hash: quote.cast.hash,
+				fid: quote.cast.author.fid,
+			},
+		});
+	}
+
+	let parentAuthorFid = undefined;
+	if (params.parent) {
+		const parent = await getCast(params.parent);
+		parentAuthorFid = parent.cast.author.fid;
+	}
+
+	const response = await fetch("https://api.neynar.com/v2/farcaster/cast", {
+		method: "POST",
+		body: JSON.stringify({
+			signer_uuid: signerUuid.signerUuid,
+			parent: params.parent,
+			parent_author_fid: parentAuthorFid,
+			text: params.text,
+			embeds,
+		}),
+		headers: {
+			"Content-Type": "application/json",
+			Accept: "application/json",
+			"X-API-KEY": process.env.NEYNAR_API_KEY as string,
+		},
+	});
+
+	const data: PostCastResponse = await response.json();
+
+	return data;
 }
 
 function extractData(data: number[][]): {
@@ -99,6 +181,7 @@ function extractData(data: number[][]): {
 	quote: string;
 	channel: string;
 	parent: string;
+	tokenAddress: string;
 } {
 	const root = `0x${Buffer.from(data[0]).toString("hex")}`;
 
@@ -114,37 +197,65 @@ function extractData(data: number[][]): {
 	const decoder = new TextDecoder("utf-8");
 	const text = decoder.decode(Uint8Array.from(textBytes)).replace(/\0/g, "");
 
-	const embedsArrays = data.slice(2 + 16, 2 + 16 + 2);
-	const embeds: string[] = [];
-	for (const embedArray of embedsArrays) {
-		// @ts-ignore
-		const embedBytes = [].concat(...embedArray);
-		// @ts-ignore
-		const embedDecoder = new TextDecoder("utf-8");
-		embeds.push(
-			embedDecoder.decode(Uint8Array.from(embedBytes)).replace(/\0/g, ""),
-		);
-	}
+	const embed1Array = data.slice(2 + 16, 2 + 32);
+	// @ts-ignore
+	const embed1Bytes = [].concat(...embed1Array);
+	const embed1Decoder = new TextDecoder("utf-8");
+	const embed1 = embed1Decoder
+		.decode(Uint8Array.from(embed1Bytes))
+		.replace(/\0/g, "");
 
-	const quoteArray = data[2 + 16 + 2];
-	const quoteDecoder = new TextDecoder("utf-8");
-	const quote = `0x${quoteDecoder.decode(Uint8Array.from(quoteArray))}`;
+	const embed2Array = data.slice(2 + 32, 2 + 48);
+	// @ts-ignore
+	const embed2Bytes = [].concat(...embed2Array);
+	const embed2Decoder = new TextDecoder("utf-8");
+	const embed2 = embed2Decoder
+		.decode(Uint8Array.from(embed2Bytes))
+		.replace(/\0/g, "");
 
-	const channelArray = data[2 + 16 + 3];
+	const quoteArray = data[2 + 48];
+	const quote = `0x${Buffer.from(quoteArray).toString("hex").slice(-40)}`;
+
+	const channelArray = data[2 + 48 + 1];
 	const channelDecoder = new TextDecoder("utf-8");
-	const channel = channelDecoder.decode(Uint8Array.from(channelArray));
+	const channel = channelDecoder
+		.decode(Uint8Array.from(channelArray))
+		.replace(/\0/g, "");
 
-	const parentArray = data[2 + 16 + 4];
-	const parentDecoder = new TextDecoder("utf-8");
-	const parent = `0x${parentDecoder.decode(Uint8Array.from(parentArray))}`;
+	const parentArray = data[2 + 48 + 2];
+	const parent = `0x${Buffer.from(parentArray).toString("hex").slice(-40)}`;
+
+	const tokenAddressArray = data[2 + 48 + 3];
+	const tokenAddress = `0x${Buffer.from(tokenAddressArray)
+		.toString("hex")
+		.slice(-40)}`;
 
 	return {
 		timestamp,
 		root: root as string,
 		text,
-		embeds,
-		quote: quote as string,
+		embeds: [embed1, embed2].filter((e) => e !== ""),
+		quote: quote === zeroHex ? "" : quote,
 		channel,
-		parent: parent as string,
+		parent: parent === zeroHex ? "" : parent,
+		tokenAddress: tokenAddress as string,
 	};
+}
+
+async function getCast(identifier: string) {
+	const response = await fetch(
+		`https://api.neynar.com/v2/farcaster/cast?type=${
+			identifier.startsWith("0x") ? "hash" : "url"
+		}&identifier=${identifier}`,
+		{
+			headers: {
+				"x-api-key": process.env.NEYNAR_API_KEY as string,
+				Accept: "application/json",
+			},
+		},
+	);
+
+	const data: GetCastResponse = await response.json();
+
+	return data;
 }

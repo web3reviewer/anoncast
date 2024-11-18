@@ -1,12 +1,9 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { useState } from "react";
 import { ConnectButton } from "@/components/connect-button";
-import { useAccount } from "wagmi";
-import { Textarea } from "@/components/ui/textarea";
-import { createProof } from "@anon/api/lib/proof";
 import { CreatePost } from "@/components/create-post";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { VenetianMask } from "lucide-react";
 
 export default function Home() {
 	return (
@@ -15,6 +12,18 @@ export default function Home() {
 				<div className="text-3xl font-bold">$ANON</div>
 				<ConnectButton />
 			</div>
+			<Alert>
+				<VenetianMask className="h-4 w-4" />
+				<AlertTitle className="font-bold">
+					Post anonymously to Farcaster
+				</AlertTitle>
+				<AlertDescription>
+					Must have <b>20,000 $ANON</b> in your wallet to post. Posts are made
+					anonymous using zk proofs. Due to the complex calculations required,
+					it could take up to a few minutes to post. We'll work on speeding this
+					up in the future.
+				</AlertDescription>
+			</Alert>
 			<CreatePost />
 		</div>
 	);

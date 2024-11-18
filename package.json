@@ -8,6 +8,7 @@
 	],
 	"scripts": {
 		"next:dev": "yarn workspace @anon/next dev",
-		"api:dev": "yarn workspace @anon/api dev"
+		"api:dev": "yarn workspace @anon/api dev",
+		"db:push": "yarn workspace @anon/db push"
 	}
 }

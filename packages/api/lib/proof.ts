@@ -21,36 +21,42 @@ export type ProofInput = {
 	note_hash_path: string[];
 	timestamp: number;
 	text: string[];
-	embeds: string[];
+	embed_1: string[];
+	embed_2: string[];
 	quote: string;
 	channel: string;
 	parent: string;
+	token_address: string;
 };
 
 export interface PostInput {
-	text: string;
+	text: string | null;
 	embeds: string[];
-	quote: string;
-	channel: string;
-	parent: string;
+	quote: string | null;
+	channel: string | null;
+	parent: string | null;
+	address: string;
+	tokenAddress: string;
 }
 
-export async function fetchTree(): Promise<Tree> {
-	return await fetch(`${process.env.NEXT_PUBLIC_API_URL}/merkle-tree`).then(
-		(res) => res.json(),
-	);
+export async function fetchTree(tokenAddress: string): Promise<Tree> {
+	return await fetch(
+		`${
+			process.env.NEXT_PUBLIC_API_URL
+		}/merkle-tree/${tokenAddress.toLowerCase()}`,
+	).then((res) => res.json());
 }
 
-export async function createProof(address: string, post: PostInput) {
+export async function createProof(post: PostInput) {
 	// @ts-ignore
 	const backend = new BarretenbergBackend(circuit);
 	// @ts-ignore
 	const noir = new Noir(circuit, backend);
 
-	const tree = await fetchTree();
+	const tree = await fetchTree(post.tokenAddress);
 
 	const nodeIndex = tree.elements.findIndex(
-		(i) => i.address === address.toLowerCase(),
+		(i) => i.address === post.address.toLowerCase(),
 	);
 	if (nodeIndex === -1) {
 		return null;
@@ -59,17 +65,20 @@ export async function createProof(address: string, post: PostInput) {
 	const node = tree.elements[nodeIndex];
 
 	const input: ProofInput = {
-		address: address.toLowerCase() as string,
+		address: post.address.toLowerCase() as string,
 		balance: `0x${BigInt(node.balance).toString(16)}`,
 		note_root: tree.root,
 		index: nodeIndex,
 		note_hash_path: node.path,
 		timestamp: Math.floor(Date.now() / 1000),
-		text: stringToHexArray(post.text, 16),
-		embeds: post.embeds.map((e) => `0x${BigInt(e).toString(16)}`),
-		quote: post.quote,
-		channel: stringToHexArray(post.channel, 1)[0],
-		parent: post.parent,
+		text: stringToHexArray(post.text ?? "", 16),
+		embed_1: stringToHexArray(post.embeds.length > 0 ? post.embeds[0] : "", 16),
+		embed_2: stringToHexArray(post.embeds.length > 1 ? post.embeds[1] : "", 16),
+		quote: post.quote ?? `0x${BigInt(0).toString(16)}`,
+		channel: stringToHexArray(post.channel ?? "", 1)[0],
+		parent: post.parent ?? `0x${BigInt(0).toString(16)}`,
+		// token_address: post.tokenAddress.toLowerCase(),
+		token_address: "0x0000000000000000000000000000000000000000",
 	};
 
 	// @ts-ignore

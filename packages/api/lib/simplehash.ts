@@ -1,5 +1,3 @@
-export const ANON_ADDRESS = "0x0db510e79909666d6dec7f5e49370838c16d950f";
-
 export type Owner = {
 	fungible_id: string;
 	owner_address: string;
@@ -9,7 +7,12 @@ export type Owner = {
 	last_transferred_date: string;
 };
 
-export async function fetchTopOwners(limit = 2000): Promise<Array<Owner>> {
+const AMOUNT = "20000000000000000000000";
+
+export async function fetchTopOwners(
+	tokenAddress: string,
+	minimumBalance = AMOUNT,
+): Promise<Array<Owner>> {
 	const owners: Array<Owner> = [];
 
 	let cursor = "";
@@ -18,7 +21,7 @@ export async function fetchTopOwners(limit = 2000): Promise<Array<Owner>> {
 			next_cursor: string;
 			owners: Array<Owner>;
 		} = await fetch(
-			`https://api.simplehash.com/api/v0/fungibles/top_wallets?fungible_id=base.${ANON_ADDRESS}&limit=50${
+			`https://api.simplehash.com/api/v0/fungibles/top_wallets?fungible_id=base.${tokenAddress}&limit=50${
 				cursor ? `&cursor=${cursor}` : ""
 			}`,
 			{
@@ -29,10 +32,18 @@ export async function fetchTopOwners(limit = 2000): Promise<Array<Owner>> {
 			},
 		).then((res) => res.json());
 
-		owners.push(...res.owners);
-		cursor = res.next_cursor;
+		let shouldBreak = false;
+		for (const owner of res.owners) {
+			if (BigInt(owner.quantity_string) >= BigInt(minimumBalance)) {
+				owners.push(owner);
+			} else {
+				shouldBreak = true;
+				break;
+			}
+		}
 
-		if (cursor === "" || owners.length === limit) {
+		cursor = res.next_cursor;
+		if (cursor === "" || shouldBreak) {
 			break;
 		}
 	}

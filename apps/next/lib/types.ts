@@ -1,25 +1,13 @@
-import { NextRequest, NextResponse } from "next/server";
-
-export async function GET(req: NextRequest) {
-	const { searchParams } = new URL(req.url);
-	const identifier = searchParams.get("identifier");
-	const type = identifier?.startsWith("0x") ? "hash" : "url";
-
-	const response = await fetch(
-		`https://api.neynar.com/v2/farcaster/cast?type=${type}&identifier=${identifier}`,
-		{
-			headers: {
-				"x-api-key": process.env.NEYNAR_API_KEY as string,
-				Accept: "application/json",
-			},
-		},
-	);
-
-	const data: GetCastResponse = await response.json();
-
-	return NextResponse.json(data);
+export interface PostCastResponse {
+	success: boolean;
+	cast: {
+		hash: string;
+		author: {
+			fid: number;
+		};
+	};
+	text: string;
 }
-
 export interface GetCastResponse {
 	cast: {
 		hash: string;

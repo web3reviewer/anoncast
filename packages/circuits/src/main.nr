@@ -10,18 +10,20 @@ fn main(
     // Cast Data
     timestamp: pub u64,
     text: pub [Field; 16],
-    embeds: pub [Field; 2],
+    embed_1: pub [Field; 16],
+    embed_2: pub [Field; 16],
     quote: pub Field,
     channel: pub Field,
     parent: pub Field,
-) -> pub (u64, [Field; 16], [Field; 2], Field, Field, Field) {
+    token_address: pub Field,
+) -> pub (u64, [Field; 16], [Field; 16], [Field; 16], Field, Field, Field, Field) {
     let commitment = std::hash::mimc_bn254([address, balance]);
 
     // Check that the input note commitment is in the root
     let new_root = compute_root_from_leaf(commitment, index, note_hash_path);
     assert(new_root == note_root);
 
-    (timestamp, text, embeds, quote, channel, parent)
+    (timestamp, text, embed_1, embed_2, quote, channel, parent, token_address)
 }
 
 // Returns the root of the tree from the provided leaf and its hashpath, using mimc hash
