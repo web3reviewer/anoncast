@@ -53,7 +53,6 @@ export const CreatePostProvider = ({
 	const [channel, setChannel] = useState<string | null>(null);
 	const [parent, setParent] = useState<GetCastResponse | null>(null);
 	const [state, setState] = useState<State>({ status: "idle" });
-	const [post, setPost] = useState<PostCastResponse | null>(null);
 
 	const createPost = async () => {
 		if (!address) return;
@@ -90,7 +89,6 @@ export const CreatePostProvider = ({
 
 			const data: PostCastResponse = await response.json();
 			if (data.success) {
-				setPost(data);
 				setState({ status: "success", post: data });
 			} else {
 				setState({ status: "error", error: "Failed to post" });

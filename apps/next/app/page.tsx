@@ -20,8 +20,8 @@ export default function Home() {
 				<AlertDescription>
 					Must have <b>20,000 $ANON</b> in your wallet to post. Posts are made
 					anonymous using zk proofs. Due to the complex calculations required,
-					it could take up to a few minutes to post. We'll work on speeding this
-					up in the future.
+					it could take up to a few minutes to post. We&apos;ll work on speeding
+					this up in the future.
 				</AlertDescription>
 			</Alert>
 			<CreatePost />
