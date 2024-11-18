@@ -5,7 +5,7 @@ import circuit from "@anon/circuits/target/main.json";
 export interface TreeElement {
 	address: string;
 	balance: string;
-	path: `0x${string}`[];
+	path: string[];
 }
 
 export interface Tree {
@@ -13,11 +13,35 @@ export interface Tree {
 	root: string;
 }
 
-export async function fetchTree(): Promise<Tree> {
-	return await fetch("/api/merkle-tree").then((res) => res.json());
+export type ProofInput = {
+	address: string;
+	balance: string;
+	note_root: string;
+	index: number;
+	note_hash_path: string[];
+	timestamp: number;
+	text: string[];
+	embeds: string[];
+	quote: string;
+	channel: string;
+	parent: string;
+};
+
+export interface PostInput {
+	text: string;
+	embeds: string[];
+	quote: string;
+	channel: string;
+	parent: string;
 }
 
-export async function createProof(address: `0x${string}`, message: string) {
+export async function fetchTree(): Promise<Tree> {
+	return await fetch(`${process.env.NEXT_PUBLIC_API_URL}/merkle-tree`).then(
+		(res) => res.json(),
+	);
+}
+
+export async function createProof(address: string, post: PostInput) {
 	// @ts-ignore
 	const backend = new BarretenbergBackend(circuit);
 	// @ts-ignore
@@ -34,16 +58,21 @@ export async function createProof(address: `0x${string}`, message: string) {
 
 	const node = tree.elements[nodeIndex];
 
-	const input = {
-		address: address.toLowerCase(),
+	const input: ProofInput = {
+		address: address.toLowerCase() as string,
 		balance: `0x${BigInt(node.balance).toString(16)}`,
 		note_root: tree.root,
 		index: nodeIndex,
 		note_hash_path: node.path,
 		timestamp: Math.floor(Date.now() / 1000),
-		message: stringToHexArray(message, 16),
+		text: stringToHexArray(post.text, 16),
+		embeds: post.embeds.map((e) => `0x${BigInt(e).toString(16)}`),
+		quote: post.quote,
+		channel: stringToHexArray(post.channel, 1)[0],
+		parent: post.parent,
 	};
 
+	// @ts-ignore
 	return await noir.generateFinalProof(input);
 }
 

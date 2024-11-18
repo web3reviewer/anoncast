@@ -48,9 +48,7 @@ async function fetchTree() {
 
 	const elements = owners.map((owner, index) => {
 		return {
-			path: merkleTree
-				.proof(index)
-				.pathElements.map((p) => `0x${p}` as `0x${string}`),
+			path: merkleTree.proof(index).pathElements.map((p) => `0x${p}` as string),
 			address: owner.owner_address.toLowerCase(),
 			balance: owner.quantity_string,
 		};
@@ -95,28 +93,58 @@ async function submitPost(proof: number[], publicInputs: number[][]) {
 
 function extractData(data: number[][]): {
 	timestamp: number;
-	root: `0x${string}`;
+	root: string;
 	text: string;
+	embeds: string[];
+	quote: string;
+	channel: string;
+	parent: string;
 } {
-	const timestampBuffer = Buffer.from(data[0]);
+	const root = `0x${Buffer.from(data[0]).toString("hex")}`;
+
+	const timestampBuffer = Buffer.from(data[1]);
 	let timestamp = 0;
 	for (let i = 0; i < timestampBuffer.length; i++) {
 		timestamp = timestamp * 256 + timestampBuffer[i];
 	}
 
-	const root = `0x${Buffer.from(data[1]).toString("hex")}`;
-
-	const messageArrays = data.slice(2, 2 + 16);
+	const textArrays = data.slice(2, 2 + 16);
 	// @ts-ignore
-	const messageBytes = [].concat(...messageArrays);
+	const textBytes = [].concat(...textArrays);
 	const decoder = new TextDecoder("utf-8");
-	const message = decoder
-		.decode(Uint8Array.from(messageBytes))
-		.replace(/\0/g, "");
+	const text = decoder.decode(Uint8Array.from(textBytes)).replace(/\0/g, "");
+
+	const embedsArrays = data.slice(2 + 16, 2 + 16 + 2);
+	const embeds: string[] = [];
+	for (const embedArray of embedsArrays) {
+		// @ts-ignore
+		const embedBytes = [].concat(...embedArray);
+		// @ts-ignore
+		const embedDecoder = new TextDecoder("utf-8");
+		embeds.push(
+			embedDecoder.decode(Uint8Array.from(embedBytes)).replace(/\0/g, ""),
+		);
+	}
+
+	const quoteArray = data[2 + 16 + 2];
+	const quoteDecoder = new TextDecoder("utf-8");
+	const quote = `0x${quoteDecoder.decode(Uint8Array.from(quoteArray))}`;
+
+	const channelArray = data[2 + 16 + 3];
+	const channelDecoder = new TextDecoder("utf-8");
+	const channel = channelDecoder.decode(Uint8Array.from(channelArray));
+
+	const parentArray = data[2 + 16 + 4];
+	const parentDecoder = new TextDecoder("utf-8");
+	const parent = `0x${parentDecoder.decode(Uint8Array.from(parentArray))}`;
 
 	return {
 		timestamp,
-		root: root as `0x${string}`,
-		text: message,
+		root: root as string,
+		text,
+		embeds,
+		quote: quote as string,
+		channel,
+		parent: parent as string,
 	};
 }
