@@ -76,7 +76,7 @@ export const CreatePostProvider = ({
 
 			setState({ status: "posting" });
 
-			const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/post`, {
+			let response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/post`, {
 				method: "POST",
 				body: JSON.stringify({
 					proof: Array.from(proof.proof),
@@ -87,7 +87,36 @@ export const CreatePostProvider = ({
 				},
 			});
 
-			const data: PostCastResponse = await response.json();
+			// Try aggain
+			if (!response.ok) {
+				response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/post`, {
+					method: "POST",
+					body: JSON.stringify({
+						proof: Array.from(proof.proof),
+						publicInputs: proof.publicInputs.map((i) => Array.from(i)),
+					}),
+					headers: {
+						"Content-Type": "application/json",
+					},
+				});
+			}
+
+			// Try again if it failed
+			let data: PostCastResponse = await response.json();
+			if (!data.success) {
+				response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/post`, {
+					method: "POST",
+					body: JSON.stringify({
+						proof: Array.from(proof.proof),
+						publicInputs: proof.publicInputs.map((i) => Array.from(i)),
+					}),
+					headers: {
+						"Content-Type": "application/json",
+					},
+				});
+				data = await response.json();
+			}
+
 			if (data.success) {
 				setState({ status: "success", post: data });
 			} else {
