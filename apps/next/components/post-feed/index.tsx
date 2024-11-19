@@ -2,7 +2,6 @@ import { Cast, GetCastsResponse } from "@/lib/types";
 import { useQuery } from "@tanstack/react-query";
 import {
 	AlertDialog,
-	AlertDialogAction,
 	AlertDialogCancel,
 	AlertDialogContent,
 	AlertDialogDescription,
@@ -68,10 +67,13 @@ export function Post({ cast, canDelete }: { cast: Cast; canDelete: boolean }) {
 				<div className="text-sm ">{cast.text}</div>
 				{cast.embeds.map((embed) => {
 					if (embed.metadata?.image) {
-						return <img src={embed.url} alt="embed" />;
+						return <img key={embed.url} src={embed.url} alt="embed" />;
 					}
 					return (
-						<div className="w-full border rounded-xl overflow-hidden">
+						<div
+							key={embed.url}
+							className="w-full border rounded-xl overflow-hidden"
+						>
 							{embed.metadata?.html.ogImage &&
 								embed.metadata.html.ogImage.length > 0 && (
 									<img
