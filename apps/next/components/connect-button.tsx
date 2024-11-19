@@ -59,7 +59,7 @@ export const ConnectButton = () => {
 									onClick={openAccountModal}
 									className="flex flex-row rounded-xl overflow-hidden bg-white items-center hover:scale-105 transition-all duration-300"
 								>
-									<Balance />
+									<Balance address={account.address} />
 									<div className="text-md font-bold bg-gray-200 text-black rounded-xl py-1.5 px-3 m-0.5">
 										{account.displayName}
 									</div>
@@ -73,8 +73,8 @@ export const ConnectButton = () => {
 	);
 };
 
-function Balance() {
-	const { data } = useBalance(ANON_ADDRESS);
+function Balance({ address }: { address: string }) {
+	const { data } = useBalance(ANON_ADDRESS, address);
 
 	const amount = parseFloat(formatEther(data ?? BigInt(0)));
 
