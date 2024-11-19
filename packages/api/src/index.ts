@@ -17,7 +17,7 @@ const redis = new Redis(process.env.REDIS_URL as string);
 
 const app = new Elysia()
 	.onError(({ server, error, path }) => {
-		console.error(path, error);
+		console.log(path, error);
 		server?.stop();
 		process.exit(1);
 	})
