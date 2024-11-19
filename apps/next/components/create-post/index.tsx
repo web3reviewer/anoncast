@@ -77,12 +77,19 @@ export function CreatePost({
 function CreatePostForm() {
   const { text, setText, createPost, state } = useCreatePost()
 
+  const length = new Blob([text ?? '']).size
+
+  const handleSetText = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    if (new Blob([e.target.value]).size > 320) return
+    setText(e.target.value)
+  }
+
   return (
     <div className="flex flex-col gap-4">
       <RemoveableParent />
       <Textarea
         value={text ?? ''}
-        onChange={(e) => setText(e.target.value)}
+        onChange={handleSetText}
         className="h-32 resize-none"
         placeholder="What's happening?"
       />
@@ -96,30 +103,33 @@ function CreatePostForm() {
           <ParentCast />
           <QuoteCast />
         </div>
-        <Button
-          onClick={createPost}
-          className="font-bold text-md rounded-xl hover:scale-105 transition-all duration-300"
-          disabled={!['idle', 'success', 'error'].includes(state.status)}
-        >
-          {state.status === 'posting' ? (
-            <div className="flex flex-row items-center gap-2">
-              <Loader2 className="animate-spin" />
-              <p>Posting</p>
-            </div>
-          ) : state.status === 'generating' ? (
-            <div className="flex flex-row items-center gap-2">
-              <Loader2 className="animate-spin" />
-              <p>Generating proof</p>
-            </div>
-          ) : state.status === 'signature' ? (
-            <div className="flex flex-row items-center gap-2">
-              <Loader2 className="animate-spin" />
-              <p>Awaiting signature</p>
-            </div>
-          ) : (
-            'Post'
-          )}
-        </Button>
+        <div className="flex flex-row items-center gap-2">
+          <p>{`${length} / 320`}</p>
+          <Button
+            onClick={createPost}
+            className="font-bold text-md rounded-xl hover:scale-105 transition-all duration-300"
+            disabled={!['idle', 'success', 'error'].includes(state.status)}
+          >
+            {state.status === 'posting' ? (
+              <div className="flex flex-row items-center gap-2">
+                <Loader2 className="animate-spin" />
+                <p>Posting</p>
+              </div>
+            ) : state.status === 'generating' ? (
+              <div className="flex flex-row items-center gap-2">
+                <Loader2 className="animate-spin" />
+                <p>Generating proof</p>
+              </div>
+            ) : state.status === 'signature' ? (
+              <div className="flex flex-row items-center gap-2">
+                <Loader2 className="animate-spin" />
+                <p>Awaiting signature</p>
+              </div>
+            ) : (
+              'Post'
+            )}
+          </Button>
+        </div>
       </div>
       {state.status === 'success' && (
         <a
