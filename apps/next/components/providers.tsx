@@ -7,7 +7,6 @@ import { WagmiProvider } from 'wagmi'
 import { base } from 'wagmi/chains'
 import { QueryClientProvider, QueryClient } from '@tanstack/react-query'
 import { ThemeProvider } from 'next-themes'
-import { AuthProvider } from '@/context/auth'
 
 const config = getDefaultConfig({
   appName: 'My RainbowKit App',
@@ -23,9 +22,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
     <ThemeProvider attribute="class" defaultTheme="dark" disableTransitionOnChange>
       <WagmiProvider config={config}>
         <QueryClientProvider client={queryClient}>
-          <AuthProvider>
-            <RainbowKitProvider>{children}</RainbowKitProvider>
-          </AuthProvider>
+          <RainbowKitProvider>{children}</RainbowKitProvider>
         </QueryClientProvider>
       </WagmiProvider>
     </ThemeProvider>

@@ -3,11 +3,8 @@ import { Button } from './ui/button'
 import { useBalance } from '@/hooks/use-balance'
 import { formatEther } from 'viem'
 import { ANON_ADDRESS } from '@anon/api/lib/config'
-import { useAuth } from '@/context/auth'
 
 export const ConnectButton = () => {
-  const { isAuthenticated, verifyAddress } = useAuth()
-
   return (
     <RainbowConnectButton.Custom>
       {({
@@ -57,18 +54,6 @@ export const ConnectButton = () => {
                   </Button>
                 )
               }
-
-              if (!isAuthenticated) {
-                return (
-                  <Button
-                    onClick={verifyAddress}
-                    className="font-bold text-md rounded-xl hover:scale-105 transition-all duration-300"
-                  >
-                    Verify
-                  </Button>
-                )
-              }
-
               return (
                 <button
                   type="button"

@@ -4,13 +4,12 @@ import { ConnectButton } from '@/components/connect-button'
 import { CreatePost } from '@/components/create-post'
 import PostFeed from '@/components/post-feed'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { useAuth } from '@/context/auth'
 import { ANON_ADDRESS } from '@anon/api/lib/config'
 import { CircleHelp } from 'lucide-react'
-import { useSignMessage } from 'wagmi'
+import { useAccount, useSignMessage } from 'wagmi'
 
 export default function Home() {
-  const { address } = useAuth()
+  const { address } = useAccount()
   const { signMessageAsync } = useSignMessage()
 
   const getSignature = async ({
