@@ -7,7 +7,7 @@ import { verifyProofForCreate, verifyProofForDelete } from '../lib/proof'
 import cors from '@elysiajs/cors'
 import { Logestic } from 'logestic'
 import { createSignerForAddress, getSignerForAddress } from '@anon/db'
-import { PostCastResponse } from './types'
+import { GetCastsResponse, PostCastResponse } from './types'
 import crypto from 'crypto'
 import { TOKEN_CONFIG } from '../lib/config'
 
@@ -67,6 +67,15 @@ const app = new Elysia()
       tokenAddress: t.String(),
     }),
   })
+  .get(
+    '/posts/:tokenAddress/trending',
+    ({ params }) => getTrendingPosts(params.tokenAddress),
+    {
+      params: t.Object({
+        tokenAddress: t.String(),
+      }),
+    }
+  )
   .post('/post/delete', ({ body }) => deletePost(body.proof, body.publicInputs), {
     body: t.Object({
       proof: t.Array(t.Number()),
@@ -353,6 +362,35 @@ async function getPosts(tokenAddress: string) {
     }
   )
   return await response.json()
+}
+
+async function getTrendingPosts(tokenAddress: string) {
+  const trending = await redis.get(`trending:${tokenAddress}`)
+  if (!trending) {
+    return {
+      casts: [],
+    }
+  }
+
+  const castsWithScores: [string, number][] = JSON.parse(trending)
+
+  const hashes = castsWithScores.map((cast) => cast[0])
+
+  const response = await fetch(
+    `https://api.neynar.com/v2/farcaster/casts?casts=${hashes.join(',')}`,
+    {
+      headers: {
+        'x-api-key': process.env.NEYNAR_API_KEY as string,
+        Accept: 'application/json',
+      },
+    }
+  )
+
+  const data: { result: GetCastsResponse } = await response.json()
+
+  return {
+    casts: data.result.casts,
+  }
 }
 
 async function deletePost(proof: number[], publicInputs: number[][]) {
