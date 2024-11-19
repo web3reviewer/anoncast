@@ -9,6 +9,7 @@ export default function SignIn() {
 		user,
 	}: { user: INeynarAuthenticatedUser }) => {
 		if (!USERNAME_TO_ADDRESS[user.username]) {
+			console.error("No address found for username", user.username);
 			return;
 		}
 

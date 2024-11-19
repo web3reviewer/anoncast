@@ -44,7 +44,12 @@ const app = new Elysia()
 				signerUuid: t.String(),
 			}),
 		},
-	);
+	)
+	.get("/validate-frame", ({ query }) => validateFrame(query.data), {
+		query: t.Object({
+			data: t.String(),
+		}),
+	});
 
 app.listen(3001);
 
@@ -255,7 +260,22 @@ async function getCast(identifier: string) {
 		},
 	);
 
-	const data: GetCastResponse = await response.json();
+	return await response.json();
+}
 
-	return data;
+async function validateFrame(message_bytes_in_hex: string) {
+	const response = await fetch(
+		"https://api.neynar.com/v2/farcaster/frame/validate",
+		{
+			method: "POST",
+			body: JSON.stringify({ message_bytes_in_hex }),
+			headers: {
+				"x-api-key": process.env.NEYNAR_API_KEY as string,
+				Accept: "application/json",
+				"Content-Type": "application/json",
+			},
+		},
+	);
+
+	return await response.json();
 }

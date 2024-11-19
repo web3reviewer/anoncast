@@ -462,3 +462,83 @@ export interface GetCastResponse {
 		};
 	};
 }
+
+export interface ActionPayload {
+	untrustedData: {
+		fid: number;
+		url: string;
+		messageHash: string;
+		timestamp: number;
+		network: number;
+		buttonIndex: number;
+		state: string;
+		castId: { fid: number; hash: string };
+	};
+	trustedData: {
+		messageBytes: string;
+	};
+}
+
+export type ValidateFrameResponse = {
+	valid: boolean;
+	action: {
+		object: string;
+		url: string;
+		interactor: {
+			object: string;
+			fid: number;
+			username: string;
+			display_name: string;
+			pfp_url: string;
+			custody_address: string;
+			profile: {
+				bio: {
+					text: string;
+				};
+				location: {
+					latitude: number;
+					longitude: number;
+					address: {
+						city: string;
+						state: string;
+						state_code: string;
+						country: string;
+						country_code: string;
+					};
+				};
+			};
+			follower_count: number;
+			following_count: number;
+			verifications: Array<string>;
+			verified_addresses: {
+				eth_addresses: Array<string>;
+				sol_addresses: Array<string>;
+			};
+			verified_accounts: Array<{
+				platform: string;
+				username: string;
+			}>;
+			power_badge: boolean;
+		};
+		tapped_button: {
+			index: number;
+		};
+		state: {
+			serialized: string;
+		};
+		cast: {
+			object: string;
+			hash: string;
+			fid: number;
+		};
+		timestamp: string;
+	};
+	signature_temporary_object: {
+		note: string;
+		hash: string;
+		hash_scheme: string;
+		signature: string;
+		signature_scheme: string;
+		signer: string;
+	};
+};

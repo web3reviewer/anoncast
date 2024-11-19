@@ -21,7 +21,12 @@ export const TOKEN_CONFIG: Record<
 	},
 };
 
-export const USERNAME_TO_ADDRESS: Record<string, string> = {
-	anoncast: ANON_ADDRESS,
-	comment: COMMENT_ADDRESS,
-};
+export const USERNAME_TO_ADDRESS: Record<string, string> = Object.entries(
+	TOKEN_CONFIG,
+).reduce(
+	(acc, [address, { farcasterUsername }]) => {
+		acc[farcasterUsername] = address;
+		return acc;
+	},
+	{} as Record<string, string>,
+);

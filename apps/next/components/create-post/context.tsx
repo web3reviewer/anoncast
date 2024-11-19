@@ -40,12 +40,13 @@ const CreatePostContext = createContext<CreatePostContextProps | undefined>(
 
 export const CreatePostProvider = ({
 	tokenAddress,
+	userAddress,
 	children,
 }: {
 	tokenAddress: string;
+	userAddress: string;
 	children: ReactNode;
 }) => {
-	const { address } = useAccount();
 	const [text, setText] = useState<string | null>(null);
 	const [image, setImage] = useState<string | null>(null);
 	const [embed, setEmbed] = useState<string | null>(null);
@@ -55,13 +56,13 @@ export const CreatePostProvider = ({
 	const [state, setState] = useState<State>({ status: "idle" });
 
 	const createPost = async () => {
-		if (!address) return;
+		if (!userAddress) return;
 
 		setState({ status: "generating" });
 		try {
 			const embeds = [image, embed].filter((e) => e !== null) as string[];
 			const proof = await createProof({
-				address,
+				address: userAddress,
 				text,
 				embeds,
 				quote: quote?.cast?.hash ?? null,

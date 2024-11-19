@@ -32,10 +32,15 @@ import { useBalance } from "@/hooks/use-balance";
 import { TOKEN_CONFIG } from "@anon/api/lib/config";
 import { formatUnits } from "viem";
 
-export function CreatePost({ tokenAddress }: { tokenAddress: string }) {
-	const { data } = useBalance(tokenAddress);
+export function CreatePost({
+	tokenAddress,
+	userAddress,
+}: {
+	tokenAddress: string;
+	userAddress: string;
+}) {
+	const { data } = useBalance(tokenAddress, userAddress);
 
-	console.log(data);
 	if (data === undefined) return null;
 
 	const minAmount = TOKEN_CONFIG[tokenAddress].minAmount;
@@ -58,7 +63,7 @@ export function CreatePost({ tokenAddress }: { tokenAddress: string }) {
 		);
 
 	return (
-		<CreatePostProvider tokenAddress={tokenAddress}>
+		<CreatePostProvider tokenAddress={tokenAddress} userAddress={userAddress}>
 			<CreatePostForm />
 		</CreatePostProvider>
 	);

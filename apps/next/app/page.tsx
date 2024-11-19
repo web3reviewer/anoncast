@@ -4,9 +4,12 @@ import { ConnectButton } from "@/components/connect-button";
 import { CreatePost } from "@/components/create-post";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { ANON_ADDRESS } from "@anon/api/lib/config";
-import { VenetianMask } from "lucide-react";
+import { CircleHelp } from "lucide-react";
+import { useAccount } from "wagmi";
 
 export default function Home() {
+	const { address } = useAccount();
+
 	return (
 		<div className="flex h-screen w-screen flex-col p-4 max-w-screen-sm mx-auto gap-8">
 			<div className="flex items-center justify-between">
@@ -14,7 +17,7 @@ export default function Home() {
 				<ConnectButton />
 			</div>
 			<Alert>
-				<VenetianMask className="h-4 w-4" />
+				<CircleHelp className="h-4 w-4" />
 				<AlertTitle className="font-bold">
 					Post anonymously to Farcaster
 				</AlertTitle>
@@ -25,7 +28,9 @@ export default function Home() {
 					this up in the future.
 				</AlertDescription>
 			</Alert>
-			<CreatePost tokenAddress={ANON_ADDRESS} />
+			{address && (
+				<CreatePost tokenAddress={ANON_ADDRESS} userAddress={address} />
+			)}
 		</div>
 	);
 }
