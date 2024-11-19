@@ -13,7 +13,7 @@ export const TOKEN_CONFIG: Record<
 > = {
   [ANON_ADDRESS]: {
     ticker: 'ANON',
-    minAmount: '20000000000000000000000',
+    minAmount: '30000000000000000000000',
     deleteAmount: '3000000000000000000000000',
     farcasterUsername: 'anoncast',
     fid: 880094,

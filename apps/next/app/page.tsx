@@ -37,7 +37,7 @@ export default function Home() {
         <CircleHelp className="h-4 w-4" />
         <AlertTitle className="font-bold">Post anonymously to Farcaster</AlertTitle>
         <AlertDescription>
-          Must have <b>20,000 $ANON</b> in your wallet to post. Posts are made anonymous
+          Must have <b>30,000 $ANON</b> in your wallet to post. Posts are made anonymous
           using zk proofs. Due to the complex calculations required, it could take up to a
           few minutes to post. We&apos;ll work on speeding this up in the future.
           <br />
