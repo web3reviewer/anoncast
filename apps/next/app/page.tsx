@@ -23,7 +23,7 @@ export default function Home() {
         message,
       })
       return { signature, message }
-    } catch (_) {
+    } catch {
       return
     }
   }
