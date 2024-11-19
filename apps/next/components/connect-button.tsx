@@ -2,6 +2,7 @@ import { ConnectButton as RainbowConnectButton } from "@rainbow-me/rainbowkit";
 import { Button } from "./ui/button";
 import { useBalance } from "@/hooks/use-balance";
 import { formatEther } from "viem";
+import { ANON_ADDRESS } from "@anon/api/lib/config";
 export const ConnectButton = () => {
 	return (
 		<RainbowConnectButton.Custom>
@@ -73,7 +74,7 @@ export const ConnectButton = () => {
 };
 
 function Balance() {
-	const { data } = useBalance();
+	const { data } = useBalance(ANON_ADDRESS);
 
 	const amount = parseFloat(formatEther(data ?? BigInt(0)));
 
