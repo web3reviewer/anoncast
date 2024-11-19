@@ -81,7 +81,26 @@ export default function CreatePostPage({
 					this up in the future.
 				</AlertDescription>
 			</Alert>
-			{data && <CreatePost tokenAddress={ANON_ADDRESS} userAddress={data} />}
+			{data && (
+				<CreatePost
+					tokenAddress={ANON_ADDRESS}
+					userAddress={data}
+					onSuccess={() => {
+						window.parent.postMessage(
+							{
+								type: "createCast",
+								data: {
+									cast: {
+										text: "Posted to @anoncast, you can close this screen.",
+										embeds: [],
+									},
+								},
+							},
+							"*",
+						);
+					}}
+				/>
+			)}
 			{!data && !isLoading && (
 				<div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded flex flex-row items-center justify-between gap-2">
 					<p className="font-bold">

@@ -8,6 +8,7 @@ import cors from "@elysiajs/cors";
 import { Logestic } from "logestic";
 import { createSignerForAddress, getSignerForAddress } from "@anon/db";
 import { GetCastResponse, PostCastResponse } from "./types";
+import crypto from "crypto";
 
 const zeroHex = "0x0000000000000000000000000000000000000000";
 
@@ -161,15 +162,30 @@ async function submitPost(proof: number[], publicInputs: number[][]) {
 		parentAuthorFid = parent.cast.author.fid;
 	}
 
+	const body = {
+		signer_uuid: signerUuid.signerUuid,
+		parent: params.parent,
+		parent_author_fid: parentAuthorFid,
+		text: params.text,
+		embeds,
+	};
+
+	const hash = crypto
+		.createHash("sha256")
+		.update(JSON.stringify(body))
+		.digest("hex");
+
+	const exists = await redis.get(`post:hash:${hash}`);
+	if (exists) {
+		console.log("Duplicate submission detected");
+		return;
+	}
+
+	await redis.set(`post:hash:${hash}`, "true", "EX", 60 * 5);
+
 	const response = await fetch("https://api.neynar.com/v2/farcaster/cast", {
 		method: "POST",
-		body: JSON.stringify({
-			signer_uuid: signerUuid.signerUuid,
-			parent: params.parent,
-			parent_author_fid: parentAuthorFid,
-			text: params.text,
-			embeds,
-		}),
+		body: JSON.stringify(body),
 		headers: {
 			"Content-Type": "application/json",
 			Accept: "application/json",

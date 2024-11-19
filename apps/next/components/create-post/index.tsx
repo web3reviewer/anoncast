@@ -35,9 +35,11 @@ import { formatUnits } from "viem";
 export function CreatePost({
 	tokenAddress,
 	userAddress,
+	onSuccess,
 }: {
 	tokenAddress: string;
 	userAddress: string;
+	onSuccess?: () => void;
 }) {
 	const { data } = useBalance(tokenAddress, userAddress);
 
@@ -63,7 +65,11 @@ export function CreatePost({
 		);
 
 	return (
-		<CreatePostProvider tokenAddress={tokenAddress} userAddress={userAddress}>
+		<CreatePostProvider
+			tokenAddress={tokenAddress}
+			userAddress={userAddress}
+			onSuccess={onSuccess}
+		>
 			<CreatePostForm />
 		</CreatePostProvider>
 	);

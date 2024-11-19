@@ -40,10 +40,12 @@ const CreatePostContext = createContext<CreatePostContextProps | undefined>(
 export const CreatePostProvider = ({
 	tokenAddress,
 	userAddress,
+	onSuccess,
 	children,
 }: {
 	tokenAddress: string;
 	userAddress: string;
+	onSuccess?: () => void;
 	children: ReactNode;
 }) => {
 	const [text, setText] = useState<string | null>(null);
@@ -101,9 +103,14 @@ export const CreatePostProvider = ({
 				});
 			}
 
+			if (!response.ok) {
+				setState({ status: "error", error: "Failed to post" });
+				return;
+			}
+
 			// Try again if it failed
-			let data: PostCastResponse = await response.json();
-			if (!data.success) {
+			let data: PostCastResponse | undefined = await response.json();
+			if (!data?.success) {
 				response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/post`, {
 					method: "POST",
 					body: JSON.stringify({
@@ -117,8 +124,9 @@ export const CreatePostProvider = ({
 				data = await response.json();
 			}
 
-			if (data.success) {
+			if (data?.success) {
 				setState({ status: "success", post: data });
+				onSuccess?.();
 			} else {
 				setState({ status: "error", error: "Failed to post" });
 			}
