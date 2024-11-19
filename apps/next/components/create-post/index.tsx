@@ -464,14 +464,16 @@ function RemoveableParent() {
         }}
       >
         <p className="text-sm text-gray-600">Replying to</p>
-        <div className="flex items-center gap-2">
-          <img
-            src={parent.cast.author.pfp_url}
-            alt={parent.cast.author.username}
-            className="w-6 h-6 rounded-full"
-          />
-          <p className="text-md font-bold">{parent.cast.author.username}</p>
-        </div>
+        {parent.cast.author && (
+          <div className="flex items-center gap-2">
+            <img
+              src={parent.cast.author.pfp_url}
+              alt={parent.cast.author.username}
+              className="w-6 h-6 rounded-full"
+            />
+            <p className="text-md font-bold">{parent.cast.author.username}</p>
+          </div>
+        )}
         <p className="text-md line-clamp-2">{parent.cast.text}</p>
       </div>
       <Button
@@ -570,11 +572,11 @@ function RemoveableQuote() {
         <p className="text-sm text-gray-600">Quoting</p>
         <div className="flex items-center gap-2">
           <img
-            src={quote.cast.author.pfp_url}
-            alt={quote.cast.author.username}
+            src={quote.cast.author?.pfp_url}
+            alt={quote.cast.author?.username}
             className="w-6 h-6 rounded-full"
           />
-          <p className="text-md font-bold">{quote.cast.author.username}</p>
+          <p className="text-md font-bold">{quote.cast.author?.username}</p>
         </div>
         <p className="text-md line-clamp-2">{quote.cast.text}</p>
       </div>

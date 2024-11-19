@@ -149,10 +149,10 @@ export function Post({
         rel="noreferrer"
       >
         <div className="flex flex-row gap-4 border p-4 rounded-xl">
-          <img src={cast.author.pfp_url} className="w-10 h-10 rounded-full" alt="pfp" />
+          <img src={cast.author?.pfp_url} className="w-10 h-10 rounded-full" alt="pfp" />
           <div className="flex flex-col gap-2 w-full">
             <div className="flex flex-row items-center gap-2">
-              <div className="text-md font-bold">{cast.author.username}</div>
+              <div className="text-md font-bold">{cast.author?.username}</div>
               <div className="text-sm font-semibold">{timeAgo(cast.timestamp)}</div>
             </div>
             <div className="text-md">{cast.text}</div>
@@ -193,14 +193,14 @@ export function Post({
                     className="flex flex-row gap-4 border p-4 rounded-xl"
                   >
                     <img
-                      src={embed.cast.author.pfp_url}
+                      src={embed.cast.author?.pfp_url}
                       className="w-10 h-10 rounded-full"
                       alt="pfp"
                     />
                     <div className="flex flex-col gap-2 w-full">
                       <div className="flex flex-row items-center gap-2">
                         <div className="text-md font-bold">
-                          {embed.cast.author.username}
+                          {embed.cast.author?.username}
                         </div>
                         <div className="text-sm font-semibold">
                           {timeAgo(embed.cast.timestamp)}
