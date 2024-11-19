@@ -77,8 +77,8 @@ export async function createProof(post: PostInput) {
 		quote: post.quote ?? `0x${BigInt(0).toString(16)}`,
 		channel: stringToHexArray(post.channel ?? "", 1)[0],
 		parent: post.parent ?? `0x${BigInt(0).toString(16)}`,
-		// token_address: post.tokenAddress.toLowerCase(),
-		token_address: "0x0000000000000000000000000000000000000000",
+		token_address: post.tokenAddress.toLowerCase(),
+		// token_address: "0x0000000000000000000000000000000000000000",
 	};
 
 	// @ts-ignore

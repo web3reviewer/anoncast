@@ -19,6 +19,9 @@ export default function SignIn() {
 				address: USERNAME_TO_ADDRESS[user.username],
 				signerUuid: user.signer_uuid,
 			}),
+			headers: {
+				"Content-Type": "application/json",
+			},
 		});
 	};
 
