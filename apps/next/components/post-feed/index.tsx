@@ -88,17 +88,18 @@ export function Post({ cast, canDelete }: { cast: Cast; canDelete: boolean }) {
           }
           return (
             <div key={embed.url} className="w-full border rounded-xl overflow-hidden">
-              {embed.metadata?.html.ogImage && embed.metadata.html.ogImage.length > 0 && (
-                <img
-                  src={embed.metadata.html.ogImage[0].url}
-                  alt={embed.metadata.html.ogImage[0].alt}
-                  className="object-cover aspect-video"
-                />
-              )}
+              {embed.metadata?.html?.ogImage &&
+                embed.metadata?.html?.ogImage.length > 0 && (
+                  <img
+                    src={embed.metadata?.html?.ogImage?.[0]?.url}
+                    alt={embed.metadata?.html?.ogImage?.[0]?.alt}
+                    className="object-cover aspect-video"
+                  />
+                )}
               <div className="p-2">
-                <h3 className="text-lg font-bold">{embed.metadata?.html.ogTitle}</h3>
+                <h3 className="text-lg font-bold">{embed.metadata?.html?.ogTitle}</h3>
                 <p className="text-sm text-gray-600">
-                  {embed.metadata?.html.ogDescription}
+                  {embed.metadata?.html?.ogDescription}
                 </p>
               </div>
             </div>
