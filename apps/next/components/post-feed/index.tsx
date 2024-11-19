@@ -46,7 +46,7 @@ export default function PostFeed({
         message,
       })
       return { signature, message }
-    } catch (e) {
+    } catch (_) {
       return
     }
   }

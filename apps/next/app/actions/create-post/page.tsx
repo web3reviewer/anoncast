@@ -1,6 +1,5 @@
 'use client'
 
-import { CreatePost } from '@/components/create-post'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { ValidateFrameResponse } from '@/lib/types'
 import { ANON_ADDRESS } from '@anon/api/lib/config'
@@ -49,7 +48,7 @@ export default function CreatePostPage({
 }: {
   searchParams: { data: string }
 }) {
-  const { data, isLoading } = useQuery({
+  const { isLoading } = useQuery({
     queryKey: ['validate-frame', searchParams.data],
     queryFn: () => getConnectedAddress(searchParams.data),
   })
