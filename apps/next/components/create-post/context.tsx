@@ -1,7 +1,6 @@
 import { GetCastResponse, PostCastResponse } from "@/lib/types";
 import { createProof } from "@anon/api/lib/proof";
 import { createContext, useContext, useState, ReactNode } from "react";
-import { useAccount } from "wagmi";
 
 type State =
 	| {
