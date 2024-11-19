@@ -2,13 +2,14 @@
 
 import { ConnectButton } from "@/components/connect-button";
 import { CreatePost } from "@/components/create-post";
+import PostFeed from "@/components/post-feed";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useAuth } from "@/context/auth";
 import { ANON_ADDRESS } from "@anon/api/lib/config";
 import { CircleHelp } from "lucide-react";
-import { useAccount } from "wagmi";
 
 export default function Home() {
-	const { address } = useAccount();
+	const { address } = useAuth();
 
 	return (
 		<div className="flex h-screen w-screen flex-col p-4 max-w-screen-sm mx-auto gap-8">
@@ -26,11 +27,16 @@ export default function Home() {
 					anonymous using zk proofs. Due to the complex calculations required,
 					it could take up to a few minutes to post. We&apos;ll work on speeding
 					this up in the future.
+					<br />
+					<br />
+					Post wisely, anyone with <b>3,000,000 $ANON</b> is able to delete any
+					posts that abuse the account.
 				</AlertDescription>
 			</Alert>
 			{address && (
 				<CreatePost tokenAddress={ANON_ADDRESS} userAddress={address} />
 			)}
+			<PostFeed tokenAddress={ANON_ADDRESS} userAddress={address} />
 		</div>
 	);
 }

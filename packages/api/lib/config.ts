@@ -6,18 +6,24 @@ export const TOKEN_CONFIG: Record<
 	{
 		ticker: string;
 		minAmount: string;
+		deleteAmount: string;
 		farcasterUsername: string;
+		fid: number;
 	}
 > = {
 	[ANON_ADDRESS]: {
 		ticker: "ANON",
 		minAmount: "20000000000000000000000",
+		deleteAmount: "3000000000000000000000000",
 		farcasterUsername: "anoncast",
+		fid: 880094,
 	},
 	[COMMENT_ADDRESS]: {
 		ticker: "COMMENT",
 		minAmount: "1",
+		deleteAmount: "1",
 		farcasterUsername: "comment",
+		fid: 880094,
 	},
 };
 

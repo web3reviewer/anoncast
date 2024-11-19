@@ -1,5 +1,5 @@
 import { GetCastResponse, PostCastResponse } from "@/lib/types";
-import { createProof } from "@anon/api/lib/proof";
+import { generateProofForCreate } from "@anon/api/lib/proof";
 import { createContext, useContext, useState, ReactNode } from "react";
 
 type State =
@@ -62,7 +62,7 @@ export const CreatePostProvider = ({
 		setState({ status: "generating" });
 		try {
 			const embeds = [image, embed].filter((e) => e !== null) as string[];
-			const proof = await createProof({
+			const proof = await generateProofForCreate({
 				address: userAddress,
 				text,
 				embeds,

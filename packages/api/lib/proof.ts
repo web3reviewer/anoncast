@@ -1,6 +1,7 @@
 import { BarretenbergBackend } from "@noir-lang/backend_barretenberg";
 import { Noir } from "@noir-lang/noir_js";
-import circuit from "@anon/circuits/target/main.json";
+import createCircuit from "@anon/circuits/create/target/main.json";
+import deleteCircuit from "@anon/circuits/delete/target/main.json";
 
 export interface TreeElement {
 	address: string;
@@ -13,7 +14,7 @@ export interface Tree {
 	root: string;
 }
 
-export type ProofInput = {
+export type CreatePostProofInput = {
 	address: string;
 	balance: string;
 	note_root: string;
@@ -29,7 +30,18 @@ export type ProofInput = {
 	token_address: string;
 };
 
-export interface PostInput {
+export type DeletePostProofInput = {
+	address: string;
+	balance: string;
+	note_root: string;
+	index: number;
+	note_hash_path: string[];
+	timestamp: number;
+	hash: string;
+	token_address: string;
+};
+
+export interface CreatePostInput {
 	text: string | null;
 	embeds: string[];
 	quote: string | null;
@@ -39,7 +51,13 @@ export interface PostInput {
 	tokenAddress: string;
 }
 
-export async function fetchTree(tokenAddress: string): Promise<Tree> {
+export interface DeletePostInput {
+	hash: string;
+	address: string;
+	tokenAddress: string;
+}
+
+export async function fetchCreateTree(tokenAddress: string): Promise<Tree> {
 	return await fetch(
 		`${
 			process.env.NEXT_PUBLIC_API_URL
@@ -47,13 +65,21 @@ export async function fetchTree(tokenAddress: string): Promise<Tree> {
 	).then((res) => res.json());
 }
 
-export async function createProof(post: PostInput) {
-	// @ts-ignore
-	const backend = new BarretenbergBackend(circuit);
-	// @ts-ignore
-	const noir = new Noir(circuit, backend);
+export async function fetchDeleteTree(tokenAddress: string): Promise<Tree> {
+	return await fetch(
+		`${
+			process.env.NEXT_PUBLIC_API_URL
+		}/merkle-tree/${tokenAddress.toLowerCase()}/delete`,
+	).then((res) => res.json());
+}
 
-	const tree = await fetchTree(post.tokenAddress);
+export async function generateProofForCreate(post: CreatePostInput) {
+	// @ts-ignore
+	const backend = new BarretenbergBackend(createCircuit);
+	// @ts-ignore
+	const noir = new Noir(createCircuit, backend);
+
+	const tree = await fetchCreateTree(post.tokenAddress);
 
 	const nodeIndex = tree.elements.findIndex(
 		(i) => i.address === post.address.toLowerCase(),
@@ -64,7 +90,7 @@ export async function createProof(post: PostInput) {
 
 	const node = tree.elements[nodeIndex];
 
-	const input: ProofInput = {
+	const input: CreatePostProofInput = {
 		address: post.address.toLowerCase() as string,
 		balance: `0x${BigInt(node.balance).toString(16)}`,
 		note_root: tree.root,
@@ -85,11 +111,71 @@ export async function createProof(post: PostInput) {
 	return await noir.generateFinalProof(input);
 }
 
-export async function verifyProof(proof: number[], publicInputs: number[][]) {
+export async function generateProofForDelete(data: DeletePostInput) {
 	// @ts-ignore
-	const backend = new BarretenbergBackend(circuit);
+	const backend = new BarretenbergBackend(deleteCircuit);
 	// @ts-ignore
-	const noir = new Noir(circuit, backend);
+	const noir = new Noir(deleteCircuit, backend);
+
+	const tree = await fetchDeleteTree(data.tokenAddress);
+
+	const nodeIndex = tree.elements.findIndex(
+		(i) => i.address === data.address.toLowerCase(),
+	);
+	if (nodeIndex === -1) {
+		return null;
+	}
+
+	const node = tree.elements[nodeIndex];
+
+	const input: DeletePostProofInput = {
+		address: data.address.toLowerCase() as string,
+		balance: `0x${BigInt(node.balance).toString(16)}`,
+		note_root: tree.root,
+		index: nodeIndex,
+		note_hash_path: node.path,
+		timestamp: Math.floor(Date.now() / 1000),
+		hash: data.hash,
+		token_address: data.tokenAddress.toLowerCase(),
+	};
+
+	// @ts-ignore
+	return await noir.generateFinalProof(input);
+}
+
+export async function verifyProofForCreate(
+	proof: number[],
+	publicInputs: number[][],
+) {
+	// @ts-ignore
+	const backend = new BarretenbergBackend(createCircuit);
+	// @ts-ignore
+	const noir = new Noir(createCircuit, backend);
+
+	await backend.instantiate();
+
+	// biome-ignore lint/complexity/useLiteralKeys: <explanation>
+	await backend["api"].acirInitProvingKey(
+		// biome-ignore lint/complexity/useLiteralKeys: <explanation>
+		backend["acirComposer"],
+		// biome-ignore lint/complexity/useLiteralKeys: <explanation>
+		backend["acirUncompressedBytecode"],
+	);
+
+	return await noir.verifyFinalProof({
+		proof: new Uint8Array(proof),
+		publicInputs: publicInputs.map((i) => new Uint8Array(i)),
+	});
+}
+
+export async function verifyProofForDelete(
+	proof: number[],
+	publicInputs: number[][],
+) {
+	// @ts-ignore
+	const backend = new BarretenbergBackend(deleteCircuit);
+	// @ts-ignore
+	const noir = new Noir(deleteCircuit, backend);
 
 	await backend.instantiate();
 

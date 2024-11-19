@@ -4,7 +4,10 @@
 	"private": true,
 	"types": "./src",
 	"main": "src/index.ts",
-	"files": ["types", "dist"],
+	"files": [
+		"types",
+		"dist"
+	],
 	"scripts": {
 		"push": "drizzle-kit push"
 	},

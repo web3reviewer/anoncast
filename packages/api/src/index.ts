@@ -3,19 +3,21 @@ import Redis from "ioredis";
 import { buildMimc7 as buildMimc } from "circomlibjs";
 import { MerkleTreeMiMC, MiMC7 } from "../lib/merkle-tree";
 import { fetchTopOwners, Owner } from "../lib/simplehash";
-import { verifyProof } from "../lib/proof";
+import { verifyProofForCreate, verifyProofForDelete } from "../lib/proof";
 import cors from "@elysiajs/cors";
 import { Logestic } from "logestic";
 import { createSignerForAddress, getSignerForAddress } from "@anon/db";
-import { GetCastResponse, PostCastResponse } from "./types";
+import { PostCastResponse } from "./types";
 import crypto from "crypto";
+import { TOKEN_CONFIG } from "../lib/config";
 
 const zeroHex = "0x0000000000000000000000000000000000000000";
 
 const redis = new Redis(process.env.REDIS_URL as string);
 
 const app = new Elysia()
-	.onError(({ server }) => {
+	.onError(({ server, error, path }) => {
+		console.error(path, error);
 		server?.stop();
 		process.exit(1);
 	})
@@ -23,6 +25,15 @@ const app = new Elysia()
 	.get(
 		"/merkle-tree/:tokenAddress",
 		({ params }) => fetchTree(params.tokenAddress),
+		{
+			params: t.Object({
+				tokenAddress: t.String(),
+			}),
+		},
+	)
+	.get(
+		"/merkle-tree/:tokenAddress/delete",
+		({ params }) => fetchTree(params.tokenAddress, true),
 		{
 			params: t.Object({
 				tokenAddress: t.String(),
@@ -54,7 +65,22 @@ const app = new Elysia()
 		query: t.Object({
 			data: t.String(),
 		}),
-	});
+	})
+	.get("/posts/:tokenAddress", ({ params }) => getPosts(params.tokenAddress), {
+		params: t.Object({
+			tokenAddress: t.String(),
+		}),
+	})
+	.post(
+		"/post/delete",
+		({ body }) => deletePost(body.proof, body.publicInputs),
+		{
+			body: t.Object({
+				proof: t.Array(t.Number()),
+				publicInputs: t.Array(t.Array(t.Number())),
+			}),
+		},
+	);
 
 app.listen(3001);
 
@@ -62,8 +88,10 @@ console.log(
 	`🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`,
 );
 
-async function fetchTree(tokenAddress: string) {
-	const data = await redis.get(`anon:tree:${tokenAddress}`);
+async function fetchTree(tokenAddress: string, isDelete?: boolean) {
+	const data = await redis.get(
+		`anon:tree:${tokenAddress}${isDelete ? ":delete" : ""}`,
+	);
 	if (data) {
 		return JSON.parse(data);
 	}
@@ -71,7 +99,7 @@ async function fetchTree(tokenAddress: string) {
 	const mimc = await buildMimc();
 	const merkleTree = new MerkleTreeMiMC(11, mimc);
 
-	const owners = await fetchOwners(tokenAddress);
+	const owners = await fetchOwners(tokenAddress, isDelete);
 	for (const owner of owners) {
 		const commitment = MiMC7(
 			mimc,
@@ -97,7 +125,7 @@ async function fetchTree(tokenAddress: string) {
 	};
 
 	await redis.set(
-		`anon:tree:${tokenAddress}`,
+		`anon:tree:${tokenAddress}${isDelete ? ":delete" : ""}`,
 		JSON.stringify(tree),
 		"EX",
 		60 * 5,
@@ -106,15 +134,20 @@ async function fetchTree(tokenAddress: string) {
 	return tree;
 }
 
-async function fetchOwners(tokenAddress: string): Promise<Array<Owner>> {
-	const data = await redis.get(`anon:owners:${tokenAddress}`);
+async function fetchOwners(
+	tokenAddress: string,
+	isDelete?: boolean,
+): Promise<Array<Owner>> {
+	const data = await redis.get(
+		`anon:owners:${tokenAddress}${isDelete ? ":delete" : ""}`,
+	);
 	if (data) {
 		return JSON.parse(data);
 	}
 
-	const owners = await fetchTopOwners(tokenAddress);
+	const owners = await fetchTopOwners(tokenAddress, isDelete);
 	await redis.set(
-		`anon:owners:${tokenAddress}`,
+		`anon:owners:${tokenAddress}${isDelete ? ":delete" : ""}`,
 		JSON.stringify(owners),
 		"EX",
 		60 * 5,
@@ -126,7 +159,7 @@ async function fetchOwners(tokenAddress: string): Promise<Array<Owner>> {
 async function submitPost(proof: number[], publicInputs: number[][]) {
 	let isValid = false;
 	try {
-		isValid = await verifyProof(proof, publicInputs);
+		isValid = await verifyProofForCreate(proof, publicInputs);
 	} catch (e) {
 		console.error(e);
 	}
@@ -135,7 +168,7 @@ async function submitPost(proof: number[], publicInputs: number[][]) {
 		throw new Error("Invalid proof");
 	}
 
-	const params = extractData(publicInputs);
+	const params = extractCreateData(publicInputs);
 
 	const signerUuid = await getSignerForAddress(params.tokenAddress);
 
@@ -198,7 +231,7 @@ async function submitPost(proof: number[], publicInputs: number[][]) {
 	return data;
 }
 
-function extractData(data: number[][]): {
+function extractCreateData(data: number[][]): {
 	timestamp: number;
 	root: string;
 	text: string;
@@ -267,6 +300,36 @@ function extractData(data: number[][]): {
 	};
 }
 
+function extractDeleteData(data: number[][]): {
+	timestamp: number;
+	root: string;
+	hash: string;
+	tokenAddress: string;
+} {
+	const root = `0x${Buffer.from(data[0]).toString("hex")}`;
+
+	const timestampBuffer = Buffer.from(data[1]);
+	let timestamp = 0;
+	for (let i = 0; i < timestampBuffer.length; i++) {
+		timestamp = timestamp * 256 + timestampBuffer[i];
+	}
+
+	const hashArray = data[2];
+	const hash = `0x${Buffer.from(hashArray).toString("hex").slice(-40)}`;
+
+	const tokenAddressArray = data[3];
+	const tokenAddress = `0x${Buffer.from(tokenAddressArray)
+		.toString("hex")
+		.slice(-40)}`;
+
+	return {
+		timestamp,
+		root: root as string,
+		hash,
+		tokenAddress: tokenAddress as string,
+	};
+}
+
 async function getCast(identifier: string) {
 	const response = await fetch(
 		`https://api.neynar.com/v2/farcaster/cast?type=${
@@ -298,4 +361,52 @@ async function validateFrame(message_bytes_in_hex: string) {
 	);
 
 	return await response.json();
+}
+
+async function getPosts(tokenAddress: string) {
+	const fid = TOKEN_CONFIG[tokenAddress].fid;
+	const response = await fetch(
+		`https://api.neynar.com/v2/farcaster/feed?feed_type=filter&filter_type=fids&fids=${fid}&with_recasts=false&limit=100`,
+		{
+			headers: {
+				"x-api-key": process.env.NEYNAR_API_KEY as string,
+				Accept: "application/json",
+			},
+		},
+	);
+	return await response.json();
+}
+
+async function deletePost(proof: number[], publicInputs: number[][]) {
+	let isValid = false;
+	try {
+		isValid = await verifyProofForDelete(proof, publicInputs);
+	} catch (e) {
+		console.error(e);
+	}
+
+	if (!isValid) {
+		throw new Error("Invalid proof");
+	}
+
+	const params = extractDeleteData(publicInputs);
+
+	const signerUuid = await getSignerForAddress(params.tokenAddress);
+
+	const response = await fetch("https://api.neynar.com/v2/farcaster/cast", {
+		method: "DELETE",
+		body: JSON.stringify({
+			signer_uuid: signerUuid.signerUuid,
+			target_hash: params.hash,
+		}),
+		headers: {
+			"Content-Type": "application/json",
+			Accept: "application/json",
+			"X-API-KEY": process.env.NEYNAR_API_KEY as string,
+		},
+	});
+
+	const data: PostCastResponse = await response.json();
+
+	return data;
 }
