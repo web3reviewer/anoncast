@@ -1,10 +1,11 @@
 import { PostCastResponse } from '@/lib/types'
 import { generateProofForDelete } from '@anon/api/lib/proof'
 import { createContext, useContext, useState, ReactNode } from 'react'
+import { hashMessage } from 'viem'
 
 type State =
   | {
-      status: 'idle' | 'generating' | 'deleting'
+      status: 'idle' | 'signature' | 'generating' | 'deleting'
     }
   | {
       status: 'success'
@@ -26,22 +27,48 @@ export const DeletePostProvider = ({
   tokenAddress,
   userAddress,
   children,
+  getSignature,
 }: {
   tokenAddress: string
   userAddress?: string
   children: ReactNode
+  getSignature: ({
+    address,
+    timestamp,
+  }: { address: string; timestamp: number }) => Promise<
+    | {
+        signature: string
+        message: string
+      }
+    | undefined
+  >
 }) => {
   const [state, setState] = useState<State>({ status: 'idle' })
 
   const deletePost = async (hash: string) => {
     if (!userAddress) return
 
-    setState({ status: 'generating' })
+    setState({ status: 'signature' })
     try {
+      const timestamp = Math.floor(Date.now() / 1000)
+      const signatureData = await getSignature({
+        address: userAddress,
+        timestamp,
+      })
+      if (!signatureData) {
+        setState({ status: 'error', error: 'Failed to get signature' })
+        return
+      }
+
+      setState({ status: 'generating' })
+
       const proof = await generateProofForDelete({
         address: userAddress,
         hash,
         tokenAddress,
+        timestamp,
+        signature: signatureData.signature,
+        messageHash: hashMessage(signatureData.message),
       })
       if (!proof) {
         setState({ status: 'error', error: 'Not allowed to delete' })

@@ -4,7 +4,10 @@
   "private": true,
   "types": "./src",
   "main": "src/index.ts",
-  "files": ["types", "dist"],
+  "files": [
+    "types",
+    "dist"
+  ],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "bun run --watch src/index.ts",
@@ -19,7 +22,8 @@
     "@noir-lang/noir_js": "^0.17.0",
     "elysia": "^1.1.25",
     "ioredis": "^5.4.1",
-    "logestic": "^1.2.4"
+    "logestic": "^1.2.4",
+    "viem": "^2.21.48"
   },
   "devDependencies": {
     "bun-types": "latest"

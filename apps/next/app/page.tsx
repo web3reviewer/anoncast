@@ -7,9 +7,26 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { useAuth } from '@/context/auth'
 import { ANON_ADDRESS } from '@anon/api/lib/config'
 import { CircleHelp } from 'lucide-react'
+import { useSignMessage } from 'wagmi'
 
 export default function Home() {
   const { address } = useAuth()
+  const { signMessageAsync } = useSignMessage()
+
+  const getSignature = async ({
+    address,
+    timestamp,
+  }: { address: string; timestamp: number }) => {
+    try {
+      const message = `${address}:${timestamp}`
+      const signature = await signMessageAsync({
+        message,
+      })
+      return { signature, message }
+    } catch (e) {
+      return
+    }
+  }
 
   return (
     <div className="flex h-screen w-screen flex-col p-4 max-w-screen-sm mx-auto gap-8">
@@ -30,7 +47,13 @@ export default function Home() {
           abuse the account.
         </AlertDescription>
       </Alert>
-      {address && <CreatePost tokenAddress={ANON_ADDRESS} userAddress={address} />}
+      {address && (
+        <CreatePost
+          tokenAddress={ANON_ADDRESS}
+          userAddress={address}
+          getSignature={getSignature}
+        />
+      )}
       <PostFeed tokenAddress={ANON_ADDRESS} userAddress={address} />
     </div>
   )

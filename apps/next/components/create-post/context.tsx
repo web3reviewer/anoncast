@@ -1,10 +1,11 @@
 import { GetCastResponse, PostCastResponse } from '@/lib/types'
 import { generateProofForCreate } from '@anon/api/lib/proof'
 import { createContext, useContext, useState, ReactNode } from 'react'
+import { hashMessage } from 'viem'
 
 type State =
   | {
-      status: 'idle' | 'generating' | 'posting'
+      status: 'idle' | 'signature' | 'generating' | 'posting'
     }
   | {
       status: 'success'
@@ -39,11 +40,22 @@ export const CreatePostProvider = ({
   tokenAddress,
   userAddress,
   onSuccess,
+  getSignature,
   children,
 }: {
   tokenAddress: string
   userAddress: string
   onSuccess?: () => void
+  getSignature: ({
+    address,
+    timestamp,
+  }: { address: string; timestamp: number }) => Promise<
+    | {
+        signature: string
+        message: string
+      }
+    | undefined
+  >
   children: ReactNode
 }) => {
   const [text, setText] = useState<string | null>(null)
@@ -57,9 +69,21 @@ export const CreatePostProvider = ({
   const createPost = async () => {
     if (!userAddress) return
 
-    setState({ status: 'generating' })
+    setState({ status: 'signature' })
     try {
       const embeds = [image, embed].filter((e) => e !== null) as string[]
+      const timestamp = Math.floor(Date.now() / 1000)
+      const signatureData = await getSignature({
+        address: userAddress,
+        timestamp,
+      })
+      if (!signatureData) {
+        setState({ status: 'error', error: 'Failed to get signature' })
+        return
+      }
+
+      setState({ status: 'generating' })
+
       const proof = await generateProofForCreate({
         address: userAddress,
         text,
@@ -68,6 +92,9 @@ export const CreatePostProvider = ({
         channel,
         parent: parent?.cast?.hash ?? null,
         tokenAddress,
+        signature: signatureData.signature,
+        messageHash: hashMessage(signatureData.message),
+        timestamp,
       })
       if (!proof) {
         setState({ status: 'error', error: 'Not allowed to post' })

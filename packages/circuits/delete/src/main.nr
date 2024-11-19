@@ -1,4 +1,5 @@
 use dep::std;
+use dep::ecrecover;
 
 fn main(
     address: Field,
@@ -11,7 +12,14 @@ fn main(
     timestamp: pub u64,
     hash: pub Field,
     token_address: pub Field,
+    signature: [u8; 64],
+    message_hash: [u8; 32],
+    pub_key_x: [u8; 32],
+    pub_key_y: [u8; 32],
 ) -> pub (u64, Field, Field) {
+    let recovered_address = ecrecover::ecrecover(pub_key_x, pub_key_y, signature, message_hash);
+    assert(address == recovered_address);
+
     let commitment = std::hash::mimc_bn254([address, balance]);
 
     // Check that the input note commitment is in the root

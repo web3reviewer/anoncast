@@ -17,6 +17,7 @@ import { DeletePostProvider, useDeletePost } from './context'
 import { useToast } from '@/hooks/use-toast'
 import { Loader2 } from 'lucide-react'
 import { useState } from 'react'
+import { useSignMessage } from 'wagmi'
 
 export default function PostFeed({
   tokenAddress,
@@ -33,6 +34,22 @@ export default function PostFeed({
   })
 
   const { data: balance } = useBalance(tokenAddress, userAddress)
+  const { signMessageAsync } = useSignMessage()
+
+  const getSignature = async ({
+    address,
+    timestamp,
+  }: { address: string; timestamp: number }) => {
+    try {
+      const message = `${address}:${timestamp}`
+      const signature = await signMessageAsync({
+        message,
+      })
+      return { signature, message }
+    } catch (e) {
+      return
+    }
+  }
 
   const canDelete =
     !!userAddress &&
@@ -40,7 +57,11 @@ export default function PostFeed({
     balance >= BigInt(TOKEN_CONFIG[tokenAddress].deleteAmount)
 
   return (
-    <DeletePostProvider tokenAddress={tokenAddress} userAddress={userAddress}>
+    <DeletePostProvider
+      tokenAddress={tokenAddress}
+      userAddress={userAddress}
+      getSignature={getSignature}
+    >
       <div className="flex flex-col gap-4">
         <div className="text-xl font-bold">Posts</div>
         {data?.casts.map((cast) => (
@@ -158,6 +179,11 @@ function DeleteButton({ cast }: { cast: Cast }) {
               <div className="flex flex-row items-center gap-2">
                 <Loader2 className="animate-spin" />
                 <p>Generating proof</p>
+              </div>
+            ) : state.status === 'signature' ? (
+              <div className="flex flex-row items-center gap-2">
+                <Loader2 className="animate-spin" />
+                <p>Awaiting signature</p>
               </div>
             ) : (
               'Delete'

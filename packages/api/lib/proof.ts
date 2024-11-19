@@ -2,6 +2,7 @@ import { BarretenbergBackend } from '@noir-lang/backend_barretenberg'
 import { Noir } from '@noir-lang/noir_js'
 import createCircuit from '@anon/circuits/create/target/main.json'
 import deleteCircuit from '@anon/circuits/delete/target/main.json'
+import { recoverPublicKey } from 'viem'
 
 export interface TreeElement {
   address: string
@@ -28,6 +29,10 @@ export type CreatePostProofInput = {
   channel: string
   parent: string
   token_address: string
+  signature: string[]
+  message_hash: string[]
+  pub_key_x: string[]
+  pub_key_y: string[]
 }
 
 export type DeletePostProofInput = {
@@ -39,9 +44,14 @@ export type DeletePostProofInput = {
   timestamp: number
   hash: string
   token_address: string
+  signature: string[]
+  message_hash: string[]
+  pub_key_x: string[]
+  pub_key_y: string[]
 }
 
 export interface CreatePostInput {
+  timestamp: number
   text: string | null
   embeds: string[]
   quote: string | null
@@ -49,12 +59,17 @@ export interface CreatePostInput {
   parent: string | null
   address: string
   tokenAddress: string
+  signature: string
+  messageHash: string
 }
 
 export interface DeletePostInput {
+  timestamp: number
   hash: string
   address: string
   tokenAddress: string
+  signature: string
+  messageHash: string
 }
 
 export async function fetchCreateTree(tokenAddress: string): Promise<Tree> {
@@ -86,13 +101,21 @@ export async function generateProofForCreate(post: CreatePostInput) {
 
   const node = tree.elements[nodeIndex]
 
+  const pubKey = await recoverPublicKey({
+    signature: post.signature as `0x${string}`,
+    hash: post.messageHash as `0x${string}`,
+  })
+
+  const pubKeyX = pubKey.slice(4, 68)
+  const pubKeyY = pubKey.slice(68)
+
   const input: CreatePostProofInput = {
     address: post.address.toLowerCase() as string,
     balance: `0x${BigInt(node.balance).toString(16)}`,
     note_root: tree.root,
     index: nodeIndex,
     note_hash_path: node.path,
-    timestamp: Math.floor(Date.now() / 1000),
+    timestamp: post.timestamp,
     text: stringToHexArray(post.text ?? '', 16),
     embed_1: stringToHexArray(post.embeds.length > 0 ? post.embeds[0] : '', 16),
     embed_2: stringToHexArray(post.embeds.length > 1 ? post.embeds[1] : '', 16),
@@ -100,7 +123,10 @@ export async function generateProofForCreate(post: CreatePostInput) {
     channel: stringToHexArray(post.channel ?? '', 1)[0],
     parent: post.parent ?? `0x${BigInt(0).toString(16)}`,
     token_address: post.tokenAddress.toLowerCase(),
-    // token_address: "0x0000000000000000000000000000000000000000",
+    signature: chunkHexString(post.signature.replace('0x', ''), 2).slice(0, 64),
+    message_hash: chunkHexString(post.messageHash.replace('0x', ''), 2).slice(0, 32),
+    pub_key_x: chunkHexString(pubKeyX.replace('0x', ''), 2).slice(0, 32),
+    pub_key_y: chunkHexString(pubKeyY.replace('0x', ''), 2).slice(0, 32),
   }
 
   // @ts-ignore
@@ -124,15 +150,27 @@ export async function generateProofForDelete(data: DeletePostInput) {
 
   const node = tree.elements[nodeIndex]
 
+  const pubKey = await recoverPublicKey({
+    signature: data.signature as `0x${string}`,
+    hash: data.messageHash as `0x${string}`,
+  })
+
+  const pubKeyX = pubKey.slice(4, 68)
+  const pubKeyY = pubKey.slice(68)
+
   const input: DeletePostProofInput = {
     address: data.address.toLowerCase() as string,
     balance: `0x${BigInt(node.balance).toString(16)}`,
     note_root: tree.root,
     index: nodeIndex,
     note_hash_path: node.path,
-    timestamp: Math.floor(Date.now() / 1000),
+    timestamp: data.timestamp,
     hash: data.hash,
     token_address: data.tokenAddress.toLowerCase(),
+    signature: chunkHexString(data.signature.replace('0x', ''), 2).slice(0, 64),
+    message_hash: chunkHexString(data.messageHash.replace('0x', ''), 2).slice(0, 32),
+    pub_key_x: chunkHexString(pubKeyX.replace('0x', ''), 2).slice(0, 32),
+    pub_key_y: chunkHexString(pubKeyY.replace('0x', ''), 2).slice(0, 32),
   }
 
   // @ts-ignore
@@ -207,4 +245,12 @@ export function stringToHexArray(input: string, length: number): string[] {
   }
 
   return hexArray
+}
+
+function chunkHexString(hexString: string, chunkSize: number): string[] {
+  const chunks: string[] = []
+  for (let i = 0; i < hexString.length; i += chunkSize) {
+    chunks.push(`0x${hexString.slice(i, i + chunkSize)}`)
+  }
+  return chunks
 }

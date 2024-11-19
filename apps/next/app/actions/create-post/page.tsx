@@ -5,7 +5,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { ValidateFrameResponse } from '@/lib/types'
 import { ANON_ADDRESS } from '@anon/api/lib/config'
 import { useQuery } from '@tanstack/react-query'
-import { CircleHelp, Loader2 } from 'lucide-react'
+import { CircleHelp, ExternalLink, Loader2 } from 'lucide-react'
 import React from 'react'
 import { createPublicClient, erc20Abi, http } from 'viem'
 import { base } from 'viem/chains'
@@ -76,7 +76,15 @@ export default function CreatePostPage({
           few minutes to post. We&apos;ll work on speeding this up in the future.
         </AlertDescription>
       </Alert>
-      {data && (
+      <a href="https://anoncast.org" target="_blank" rel="noreferrer">
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded flex flex-row items-center justify-between gap-2">
+          <div className="flex flex-row items-center gap-2">
+            <p>Mini-app is currently disabled. Go to anoncast.org to post.</p>
+            <ExternalLink size={16} />
+          </div>
+        </div>
+      </a>
+      {/* {data && (
         <CreatePost
           tokenAddress={ANON_ADDRESS}
           userAddress={data}
@@ -94,6 +102,7 @@ export default function CreatePostPage({
               '*'
             )
           }}
+          getSignature={() => Promise.resolve(searchParams.data)}
         />
       )}
       {!data && !isLoading && (
@@ -102,7 +111,7 @@ export default function CreatePostPage({
             You don&apos;t have an address connected to your Farcaster account.
           </p>
         </div>
-      )}
+      )} */}
     </div>
   )
 }

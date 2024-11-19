@@ -23,10 +23,21 @@ export function CreatePost({
   tokenAddress,
   userAddress,
   onSuccess,
+  getSignature,
 }: {
   tokenAddress: string
   userAddress: string
   onSuccess?: () => void
+  getSignature: ({
+    address,
+    timestamp,
+  }: { address: string; timestamp: number }) => Promise<
+    | {
+        signature: string
+        message: string
+      }
+    | undefined
+  >
 }) {
   const { data } = useBalance(tokenAddress, userAddress)
 
@@ -56,6 +67,7 @@ export function CreatePost({
       tokenAddress={tokenAddress}
       userAddress={userAddress}
       onSuccess={onSuccess}
+      getSignature={getSignature}
     >
       <CreatePostForm />
     </CreatePostProvider>
@@ -98,6 +110,11 @@ function CreatePostForm() {
             <div className="flex flex-row items-center gap-2">
               <Loader2 className="animate-spin" />
               <p>Generating proof</p>
+            </div>
+          ) : state.status === 'signature' ? (
+            <div className="flex flex-row items-center gap-2">
+              <Loader2 className="animate-spin" />
+              <p>Awaiting signature</p>
             </div>
           ) : (
             'Post'
