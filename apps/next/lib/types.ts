@@ -9,6 +9,10 @@ export interface PostCastResponse {
   text: string
 }
 
+export interface DeleteCastResponse {
+  success: boolean
+}
+
 export interface GetCastResponse {
   cast: Cast
 }

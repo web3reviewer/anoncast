@@ -356,35 +356,34 @@ async function getPosts(tokenAddress: string) {
 }
 
 async function deletePost(proof: number[], publicInputs: number[][]) {
-  let isValid = false
-  try {
-    isValid = await verifyProofForDelete(proof, publicInputs)
-  } catch (e) {
-    console.error(e)
-  }
+  return { success: true }
+  //   let isValid = false
+  //   try {
+  //     isValid = await verifyProofForDelete(proof, publicInputs)
+  //   } catch (e) {
+  //     console.error(e)
+  //   }
 
-  if (!isValid) {
-    throw new Error('Invalid proof')
-  }
+  //   if (!isValid) {
+  //     throw new Error('Invalid proof')
+  //   }
 
-  const params = extractDeleteData(publicInputs)
+  //   const params = extractDeleteData(publicInputs)
 
-  const signerUuid = await getSignerForAddress(params.tokenAddress)
+  //   const signerUuid = await getSignerForAddress(params.tokenAddress)
 
-  const response = await fetch('https://api.neynar.com/v2/farcaster/cast', {
-    method: 'DELETE',
-    body: JSON.stringify({
-      signer_uuid: signerUuid.signerUuid,
-      target_hash: params.hash,
-    }),
-    headers: {
-      'Content-Type': 'application/json',
-      Accept: 'application/json',
-      'X-API-KEY': process.env.NEYNAR_API_KEY as string,
-    },
-  })
+  //   const response = await fetch('https://api.neynar.com/v2/farcaster/cast', {
+  //     method: 'DELETE',
+  //     body: JSON.stringify({
+  //       signer_uuid: signerUuid.signerUuid,
+  //       target_hash: params.hash,
+  //     }),
+  //     headers: {
+  //       'Content-Type': 'application/json',
+  //       Accept: 'application/json',
+  //       'X-API-KEY': process.env.NEYNAR_API_KEY as string,
+  //     },
+  //   })
 
-  const data: PostCastResponse = await response.json()
-
-  return data
+  //   await response.json()
 }
