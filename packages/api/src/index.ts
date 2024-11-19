@@ -14,6 +14,10 @@ const zeroHex = "0x0000000000000000000000000000000000000000";
 const redis = new Redis(process.env.REDIS_URL as string);
 
 const app = new Elysia()
+	.onError(({ server }) => {
+		server?.stop();
+		process.exit(1);
+	})
 	.use(cors().use(Logestic.preset("common")))
 	.get(
 		"/merkle-tree/:tokenAddress",
