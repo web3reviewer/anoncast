@@ -84,6 +84,21 @@ async function fetchTree(tokenAddress: string, isDelete?: boolean) {
     return JSON.parse(data)
   }
 
+  const tree = await createTree({ tokenAddress, isDelete })
+  await redis.set(
+    `anon:tree:${tokenAddress}${isDelete ? ':delete' : ''}`,
+    JSON.stringify(tree),
+    'EX',
+    60 * 5
+  )
+
+  return tree
+}
+
+export async function createTree({
+  tokenAddress,
+  isDelete,
+}: { tokenAddress: string; isDelete?: boolean }) {
   const mimc = await buildMimc()
   const merkleTree = new MerkleTreeMiMC(11, mimc)
 
@@ -111,13 +126,6 @@ async function fetchTree(tokenAddress: string, isDelete?: boolean) {
     root,
     elements,
   }
-
-  await redis.set(
-    `anon:tree:${tokenAddress}${isDelete ? ':delete' : ''}`,
-    JSON.stringify(tree),
-    'EX',
-    60 * 5
-  )
 
   return tree
 }

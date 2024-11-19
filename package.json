@@ -1,15 +1,13 @@
 {
-	"name": "anon",
-	"private": true,
-	"workspaces": [
-		"packages/*",
-		"apps/*"
-	],
-	"scripts": {
-		"build": "bun run --filter '**' build",
-		"next:dev": "bun run --filter @anon/next dev",
-		"api:dev": "bun run --filter @anon/api dev",
-		"api:start": "bun run --filter @anon/api start",
-		"db:push": "bun run --filter @anon/db push"
-	}
+  "name": "anon",
+  "private": true,
+  "workspaces": ["packages/*", "apps/*"],
+  "scripts": {
+    "build": "bun run --filter '**' build",
+    "next:dev": "bun run --filter @anon/next dev",
+    "api:dev": "bun run --filter @anon/api dev",
+    "api:start": "bun run --filter @anon/api start",
+    "api:update-merkle-tree": "bun run --filter @anon/api update-merkle-tree",
+    "db:push": "bun run --filter @anon/db push"
+  }
 }
