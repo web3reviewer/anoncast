@@ -1,7 +1,7 @@
 import { Button } from '../ui/button'
 import { Textarea } from '../ui/textarea'
 import { CreatePostProvider, useCreatePost } from './context'
-import { ExternalLink, Image, Link, Loader2, Quote, Reply, X } from 'lucide-react'
+import { Image, Link, Loader2, Quote, Reply, X } from 'lucide-react'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip'
 import { ReactNode, useRef, useState } from 'react'
 import {
@@ -19,7 +19,6 @@ import { useBalance } from '@/hooks/use-balance'
 import { TOKEN_CONFIG } from '@anon/utils/src/config'
 import { formatUnits } from 'viem'
 import { useToast } from '@/hooks/use-toast'
-import { ToastAction } from '../ui/toast'
 import { api } from '@/lib/api'
 
 const MAX_EMBEDS = 2
@@ -91,22 +90,10 @@ function CreatePostForm() {
   }
 
   const handleCreatePost = async () => {
-    const hash = await createPost()
-    if (hash) {
-      toast({
-        title: 'Post created',
-        action: (
-          <ToastAction
-            altText="View on Warpcast"
-            onClick={() => {
-              window.open(`https://warpcast.com/~/conversations/${hash}`, '_blank')
-            }}
-          >
-            View on Warpcast
-          </ToastAction>
-        ),
-      })
-    }
+    await createPost()
+    toast({
+      title: 'Post will be created in 1-2 minutes',
+    })
   }
 
   return (
@@ -135,12 +122,7 @@ function CreatePostForm() {
             className="font-bold text-md rounded-xl hover:scale-105 transition-all duration-300"
             disabled={!['idle', 'success', 'error'].includes(state.status)}
           >
-            {state.status === 'posting' ? (
-              <div className="flex flex-row items-center gap-2">
-                <Loader2 className="animate-spin" />
-                <p>Posting</p>
-              </div>
-            ) : state.status === 'generating' ? (
+            {state.status === 'generating' ? (
               <div className="flex flex-row items-center gap-2">
                 <Loader2 className="animate-spin" />
                 <p>Generating proof</p>
@@ -156,21 +138,6 @@ function CreatePostForm() {
           </Button>
         </div>
       </div>
-      {state.status === 'success' && (
-        <a
-          href={`https://warpcast.com/~/conversations/${state.post.cast.hash}`}
-          target="_blank"
-          rel="noreferrer"
-        >
-          <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded flex flex-row items-center justify-between gap-2">
-            <p className="font-bold">Posted!</p>
-            <div className="flex flex-row items-center gap-2">
-              <p>View on Warpcast</p>
-              <ExternalLink size={16} />
-            </div>
-          </div>
-        </a>
-      )}
     </div>
   )
 }
