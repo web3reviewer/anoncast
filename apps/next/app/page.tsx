@@ -59,6 +59,22 @@ export default function Home() {
         </AlertDescription>
         <div className="mt-4 flex flex-row gap-2 justify-end">
           <a
+            href="https://warpcast.com/anoncast"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm text-gray-500 font-semibold"
+          >
+            Farcaster
+          </a>
+          <a
+            href="https://x.com/anoncast_"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm text-gray-500 font-semibold"
+          >
+            X/Twitter
+          </a>
+          <a
             href="https://dexscreener.com/base/0xc4ecaf115cbce3985748c58dccfc4722fef8247c"
             target="_blank"
             rel="noopener noreferrer"
