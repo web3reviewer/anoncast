@@ -144,7 +144,7 @@ export function Post({
   return (
     <div className="relative">
       <a
-        href={`https://warpcast.com/~/conversations/${cast.hash}`}
+        href={`https://warpcast.com/${cast.author.username}/${cast.hash.slice(0, 10)}`}
         target="_blank"
         rel="noreferrer"
       >

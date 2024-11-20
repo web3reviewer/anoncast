@@ -453,7 +453,7 @@ async function validateFrame(message_bytes_in_hex: string) {
 async function getPosts(tokenAddress: string) {
   const fid = TOKEN_CONFIG[tokenAddress].fid
   const response = await fetch(
-    `https://api.neynar.com/v2/farcaster/feed?feed_type=filter&filter_type=fids&fids=${fid}&with_recasts=false&limit=100`,
+    `https://api.neynar.com/v2/farcaster/feed/user/casts?limit=150&include_replies=true&fid=${fid}`,
     {
       headers: {
         'x-api-key': process.env.NEYNAR_API_KEY as string,
