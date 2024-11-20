@@ -57,6 +57,32 @@ export default function Home() {
             </li>
           </ul>
         </AlertDescription>
+        <div className="mt-4 flex flex-row gap-2 justify-end">
+          <a
+            href="https://dexscreener.com/base/0xc4ecaf115cbce3985748c58dccfc4722fef8247c"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm text-gray-500 font-semibold"
+          >
+            DEX Screener
+          </a>
+          <a
+            href="https://basescan.org/token/0x0db510e79909666d6dec7f5e49370838c16d950f"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm text-gray-500 font-semibold"
+          >
+            Basescan
+          </a>
+          <a
+            href="https://app.uniswap.org/swap?outputCurrency=0x0Db510e79909666d6dEc7f5e49370838c16D950f&chain=base"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm text-gray-500 font-semibold"
+          >
+            Uniswap
+          </a>
+        </div>
       </Alert>
       {address && (
         <CreatePost
