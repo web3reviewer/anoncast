@@ -514,6 +514,19 @@ async function deletePost(proof: number[], publicInputs: number[][]) {
 
   const signerUuid = await getSignerForAddress(params.tokenAddress)
 
+  const cast = await getCast(params.hash)
+  if (!cast.cast) {
+    return {
+      success: false,
+    }
+  }
+
+  if (new Date(cast.cast.timestamp).getTime() < Date.now() - 10800 * 1000) {
+    return {
+      success: false,
+    }
+  }
+
   const response = await fetch('https://api.neynar.com/v2/farcaster/cast', {
     method: 'DELETE',
     body: JSON.stringify({

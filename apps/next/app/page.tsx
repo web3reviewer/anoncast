@@ -53,7 +53,7 @@ export default function Home() {
               - <b>1,000,000 ANON</b>: Promote posts to X/Twitter
             </li>
             <li>
-              - <b>3,000,000 ANON</b>: Delete posts
+              - <b>1,000,000 ANON</b>: Delete posts
             </li>
           </ul>
         </AlertDescription>
