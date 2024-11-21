@@ -5,7 +5,7 @@ import { zeroAddress } from 'viem'
 import { CreatePostParams, SubmitHashParams } from '../services/types'
 import { neynar } from '../services/neynar'
 import { promoteToTwitter } from '../services/twitter'
-import { getPostMapping } from '@anon/db'
+import { createPostMapping, getPostMapping } from '@anon/db'
 import { getQueue, QueueName } from '@anon/queue/src/utils'
 
 export const postRoutes = createElysia({ prefix: '/posts' })
@@ -116,6 +116,14 @@ export const postRoutes = createElysia({ prefix: '/posts' })
       }
 
       const tweetId = await promoteToTwitter(cast.cast)
+
+      if (!tweetId) {
+        return {
+          success: false,
+        }
+      }
+
+      await createPostMapping(params.hash, tweetId)
 
       return {
         success: true,
