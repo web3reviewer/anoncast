@@ -20,6 +20,7 @@ import { TOKEN_CONFIG } from '@anon/utils/src/config'
 import { formatUnits } from 'viem'
 import { useToast } from '@/hooks/use-toast'
 import { api } from '@/lib/api'
+import Confetti from 'confetti-react'
 
 const MAX_EMBEDS = 2
 
@@ -81,6 +82,7 @@ export function CreatePost({
 function CreatePostForm() {
   const { text, setText, createPost, state } = useCreatePost()
   const { toast } = useToast()
+  const [confetti, setConfetti] = useState(false)
 
   const length = new Blob([text ?? '']).size
 
@@ -94,6 +96,7 @@ function CreatePostForm() {
     toast({
       title: 'Post will be created in 1-2 minutes',
     })
+    setConfetti(true)
   }
 
   return (
@@ -138,6 +141,40 @@ function CreatePostForm() {
           </Button>
         </div>
       </div>
+      {confetti && (
+        <Confetti
+          width={window.innerWidth}
+          height={window.innerHeight}
+          colors={[
+            '#808080', // Mid gray
+            '#999999',
+            '#b3b3b3',
+            '#cccccc',
+            '#e6e6e6',
+            '#ffffff', // Pure white
+          ]}
+          drawShape={(ctx) => {
+            ctx.beginPath()
+            ctx.lineWidth = 3
+
+            // Draw the main curve of the question mark
+            ctx.moveTo(0, -8)
+            ctx.quadraticCurveTo(8, -8, 8, -16)
+            ctx.quadraticCurveTo(8, -30, 0, -30)
+            ctx.quadraticCurveTo(-8, -30, -8, -20)
+
+            // Draw the dot of the question mark
+            ctx.moveTo(2, 0)
+            ctx.arc(0, 0, 2, 0, Math.PI * 2, true)
+
+            ctx.stroke()
+            ctx.closePath()
+          }}
+          gravity={0.25}
+          recycle={false}
+          onConfettiComplete={() => setConfetti(false)}
+        />
+      )}
     </div>
   )
 }
