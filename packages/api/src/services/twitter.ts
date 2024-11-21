@@ -40,8 +40,9 @@ export async function promoteToTwitter(cast: Cast) {
         usedUrls.add(embed.url)
       }
     } else if (embed.cast) {
-      const url = `https://warpcast.com/${embed.cast.author.username
-        }/${embed.cast.hash.slice(0, 10)}`
+      const url = `https://warpcast.com/${
+        embed.cast.author.username
+      }/${embed.cast.hash.slice(0, 10)}`
       if (!usedUrls.has(url)) {
         text += `\n\n${url}`
         usedUrls.add(url)
@@ -61,52 +62,48 @@ async function formatAndSubmitToTwitter(
   image?: string,
   quoteTweetId?: string
 ) {
-  try {
-    let mediaId: string | undefined
-    if (image) {
-      const { data: binaryData, mimeType } = await new Promise<{
-        data: Buffer
-        mimeType: string
-      }>((resolve, reject) => {
-        https
-          .get(image, (res) => {
-            res.setEncoding('binary')
-            let data = Buffer.alloc(0)
+  let mediaId: string | undefined
+  if (image) {
+    const { data: binaryData, mimeType } = await new Promise<{
+      data: Buffer
+      mimeType: string
+    }>((resolve, reject) => {
+      https
+        .get(image, (res) => {
+          res.setEncoding('binary')
+          let data = Buffer.alloc(0)
 
-            res.on('data', (chunk) => {
-              data = Buffer.concat([data, Buffer.from(chunk, 'binary')])
-            })
-            res.on('end', () => {
-              const mimeType = res.headers['content-type'] || 'image/jpeg'
-              resolve({ data, mimeType })
-            })
+          res.on('data', (chunk) => {
+            data = Buffer.concat([data, Buffer.from(chunk, 'binary')])
           })
-          .on('error', (e) => {
-            reject(e)
+          res.on('end', () => {
+            const mimeType = res.headers['content-type'] || 'image/jpeg'
+            resolve({ data, mimeType })
           })
-      })
-      mediaId = await twitterClient.v1.uploadMedia(binaryData as unknown as Buffer, {
-        mimeType,
-      })
-    }
+        })
+        .on('error', (e) => {
+          reject(e)
+        })
+    })
+    mediaId = await twitterClient.v1.uploadMedia(binaryData as unknown as Buffer, {
+      mimeType,
+    })
+  }
 
-    const params: SendTweetV2Params = {}
-    if (mediaId) {
-      params.media = {
-        media_ids: [mediaId],
-      }
+  const params: SendTweetV2Params = {}
+  if (mediaId) {
+    params.media = {
+      media_ids: [mediaId],
     }
+  }
 
-    if (quoteTweetId) {
-      params.quote_tweet_id = quoteTweetId
-    }
+  if (quoteTweetId) {
+    params.quote_tweet_id = quoteTweetId
+  }
 
-    const result = await twitterClient.v2.tweet(text, params)
+  const result = await twitterClient.v2.tweet(text, params)
 
-    if (result?.data?.id) {
-      return result.data.id
-    }
-  } catch (e) {
-    console.error(e)
+  if (result?.data?.id) {
+    return result.data.id
   }
 }
