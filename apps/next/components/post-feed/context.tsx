@@ -98,6 +98,7 @@ export const PostProvider = ({
           ProofType.DELETE_POST,
           Array.from(proof.proof),
           proof.publicInputs.map((i) => Array.from(i))
+          {}
         )
       }
 

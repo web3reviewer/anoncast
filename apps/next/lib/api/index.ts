@@ -34,7 +34,7 @@ export const api = {
     type: ProofType,
     proof: number[],
     publicInputs: number[][],
-    args?: { asReply?: boolean }
+    args: { asReply?: boolean }
   ) => {
     await apiClient.request(`/posts/submit`, {
       method: 'POST',
@@ -58,7 +58,7 @@ export const api = {
   promotePost: async (
     proof: number[],
     publicInputs: number[][],
-    args?: { asReply?: boolean }
+    args: { asReply?: boolean }
   ) => {
     const response = await apiClient.request<
       { success: false } | { success: true; tweetId: string }
