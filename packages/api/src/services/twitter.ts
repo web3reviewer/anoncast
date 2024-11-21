@@ -6,8 +6,11 @@ import {
 } from 'twitter-api-v2'
 import { Cast } from './types'
 import https from 'https'
+import { Redis } from 'ioredis'
 
 TwitterApiV2Settings.debug = true
+
+const redis = new Redis(process.env.REDIS_URL as string)
 
 export const twitterClient = new TwitterApi({
   appKey: process.env.TWITTER_API_KEY as string,
@@ -115,8 +118,15 @@ async function formatAndSubmitToTwitter(
     }
   } catch (e) {
     if (e instanceof ApiResponseError) {
-      console.log('twitter rate limit')
-      console.log(JSON.stringify(e.rateLimit))
+      if (e.rateLimit) {
+        await redis.set(
+          'twitter:rate-limit',
+          e.rateLimit.reset,
+          'EXAT',
+          e.rateLimit.reset
+        )
+      }
     }
+    throw e
   }
 }

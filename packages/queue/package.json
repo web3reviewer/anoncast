@@ -4,12 +4,17 @@
   "private": true,
   "types": "./src",
   "main": "src/index.ts",
-  "files": ["types", "dist"],
+  "files": [
+    "types",
+    "dist"
+  ],
   "scripts": {
     "start": "bun run src/index.ts",
-    "ui": "bun run src/ui.ts"
+    "ui": "bun run src/ui.ts",
+    "process-failed": "while true; do bun run src/process-failed.ts; sleep 60; done"
   },
   "dependencies": {
+    "@anon/api": "*",
     "@anon/utils": "*",
     "@bull-board/api": "^6.5.3",
     "@bull-board/fastify": "^6.5.3",
