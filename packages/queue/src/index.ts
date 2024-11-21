@@ -6,20 +6,10 @@ import { ProofType } from '@anon/utils/src/proofs'
 const redis = new Redis(process.env.REDIS_URL as string)
 
 const run = async () => {
-  // Manual run
-  if (process.argv[2]) {
-    const queue = getQueue(QueueName.Default)
-    const job = await queue.getJob(process.argv[2])
-    if (job) {
-      const result = await handler(job.data)
-      console.log(JSON.stringify(result, null, 2))
-    }
-    return
-  }
-
   // Start worker
   const usePromotePost = !!process.argv[2]
   const queueName = usePromotePost ? QueueName.PromotePost : QueueName.Default
+  console.log(`Starting worker for ${queueName}`)
   const worker = getWorker(queueName, async (job) => {
     if (job.data.type === ProofType.PROMOTE_POST) {
       const rateLimit = await redis.get('twitter:rate-limit')

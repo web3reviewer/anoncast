@@ -6,7 +6,10 @@ import { getQueue, QueueName } from './utils'
 
 const setupBullBoardServerAdapter = () => {
   const serverAdapter = new FastifyAdapter()
-  const queues = [new BullMQAdapter(getQueue(QueueName.Default))]
+  const queues = [
+    new BullMQAdapter(getQueue(QueueName.Default)),
+    new BullMQAdapter(getQueue(QueueName.PromotePost)),
+  ]
   createBullBoard({
     queues,
     serverAdapter,

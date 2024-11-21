@@ -8,6 +8,7 @@
   "scripts": {
     "start": "bun run src/index.ts",
     "start:promote-post": "bun run src/index.ts promote-post",
+    "start:manual": "bun run src/manual.ts",
     "ui": "bun run src/ui.ts",
     "process-failed": "while true; do bun run src/process-failed.ts; sleep 60; done"
   },
