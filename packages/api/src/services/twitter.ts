@@ -1,6 +1,13 @@
-import { SendTweetV2Params, TwitterApi } from 'twitter-api-v2'
+import {
+  ApiResponseError,
+  SendTweetV2Params,
+  TwitterApi,
+  TwitterApiV2Settings,
+} from 'twitter-api-v2'
 import { Cast } from './types'
 import https from 'https'
+
+TwitterApiV2Settings.debug = true
 
 export const twitterClient = new TwitterApi({
   appKey: process.env.TWITTER_API_KEY as string,
@@ -101,9 +108,15 @@ async function formatAndSubmitToTwitter(
     params.quote_tweet_id = quoteTweetId
   }
 
-  const result = await twitterClient.v2.tweet(text, params)
-
-  if (result?.data?.id) {
-    return result.data.id
+  try {
+    const result = await twitterClient.v2.tweet(text, params)
+    if (result?.data?.id) {
+      return result.data.id
+    }
+  } catch (e) {
+    if (e instanceof ApiResponseError) {
+      console.log('twitter rate limit')
+      console.log(JSON.stringify(e.rateLimit))
+    }
   }
 }
