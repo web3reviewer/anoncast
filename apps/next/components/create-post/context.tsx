@@ -113,11 +113,18 @@ export const CreatePostProvider = ({
         return
       }
 
-      await api.submitAction(
-        ProofType.CREATE_POST,
-        Array.from(proof.proof),
-        proof.publicInputs.map((i) => Array.from(i))
-      )
+      if (process.env.DISABLE_QUEUE) {
+        await api.createPost(
+          Array.from(proof.proof),
+          proof.publicInputs.map((i) => Array.from(i))
+        )
+      } else {
+        await api.submitAction(
+          ProofType.CREATE_POST,
+          Array.from(proof.proof),
+          proof.publicInputs.map((i) => Array.from(i))
+        )
+      }
 
       resetState()
 

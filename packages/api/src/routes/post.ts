@@ -12,7 +12,11 @@ export const postRoutes = createElysia({ prefix: '/posts' })
   .post(
     '/submit',
     async ({ body }) => {
-      await getQueue(QueueName.Default).add(`${body.type}-${Date.now()}`, body)
+      if (body.type === ProofType.PROMOTE_POST) {
+        await getQueue(QueueName.PromotePost).add(`${body.type}-${Date.now()}`, body)
+      } else {
+        await getQueue(QueueName.Default).add(`${body.type}-${Date.now()}`, body)
+      }
     },
     {
       body: t.Object({

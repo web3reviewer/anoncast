@@ -18,7 +18,9 @@ const run = async () => {
   }
 
   // Start worker
-  const worker = getWorker(QueueName.Default, async (job) => {
+  const usePromotePost = !!process.argv[2]
+  const queueName = usePromotePost ? QueueName.PromotePost : QueueName.Default
+  const worker = getWorker(queueName, async (job) => {
     if (job.data.type === ProofType.PROMOTE_POST) {
       const rateLimit = await redis.get('twitter:rate-limit')
       if (rateLimit) {

@@ -88,11 +88,18 @@ export const PostProvider = ({
         return
       }
 
-      await api.submitAction(
-        ProofType.DELETE_POST,
-        Array.from(proof.proof),
-        proof.publicInputs.map((i) => Array.from(i))
-      )
+      if (process.env.DISABLE_QUEUE) {
+        await api.deletePost(
+          Array.from(proof.proof),
+          proof.publicInputs.map((i) => Array.from(i))
+        )
+      } else {
+        await api.submitAction(
+          ProofType.DELETE_POST,
+          Array.from(proof.proof),
+          proof.publicInputs.map((i) => Array.from(i))
+        )
+      }
 
       setDeleteState({ status: 'idle' })
     } catch (e) {
@@ -136,11 +143,18 @@ export const PostProvider = ({
         return
       }
 
-      await api.submitAction(
-        ProofType.PROMOTE_POST,
-        Array.from(proof.proof),
-        proof.publicInputs.map((i) => Array.from(i))
-      )
+      if (process.env.DISABLE_QUEUE) {
+        await api.promotePost(
+          Array.from(proof.proof),
+          proof.publicInputs.map((i) => Array.from(i))
+        )
+      } else {
+        await api.submitAction(
+          ProofType.PROMOTE_POST,
+          Array.from(proof.proof),
+          proof.publicInputs.map((i) => Array.from(i))
+        )
+      }
 
       setPromoteState({ status: 'idle' })
     } catch (e) {

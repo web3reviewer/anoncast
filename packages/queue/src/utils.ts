@@ -4,6 +4,7 @@ import { ProofType } from '@anon/utils/src/proofs'
 
 export enum QueueName {
   Default = 'default',
+  PromotePost = 'promote-post',
 }
 
 export type QueueArgs = {
@@ -14,6 +15,7 @@ export type QueueArgs = {
 
 type QueueType = {
   [QueueName.Default]: QueueArgs
+  [QueueName.PromotePost]: QueueArgs
 }
 
 const connection = new Redis(process.env.REDIS_URL as string, {
