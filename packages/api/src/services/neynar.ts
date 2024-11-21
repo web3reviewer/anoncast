@@ -138,6 +138,7 @@ class NeynarService {
       parent_author_fid: parentAuthorFid,
       text: params.text,
       embeds,
+      channel_id: params.channel,
     }
 
     const hash = crypto.createHash('sha256').update(JSON.stringify(body)).digest('hex')
