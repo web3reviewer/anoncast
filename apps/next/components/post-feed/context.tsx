@@ -97,7 +97,7 @@ export const PostProvider = ({
         await api.submitAction(
           ProofType.DELETE_POST,
           Array.from(proof.proof),
-          proof.publicInputs.map((i) => Array.from(i))
+          proof.publicInputs.map((i) => Array.from(i)),
           {}
         )
       }
