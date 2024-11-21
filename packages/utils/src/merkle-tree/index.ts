@@ -9,7 +9,7 @@ interface BuildTreeArgs {
 
 export async function buildHoldersTree(args: BuildTreeArgs) {
   const mimc = await buildMimc()
-  const merkleTree = new MerkleTreeMiMC(11, mimc)
+  const merkleTree = new MerkleTreeMiMC(12, mimc)
 
   const owners = await fetchHolders(args)
   for (const owner of owners) {

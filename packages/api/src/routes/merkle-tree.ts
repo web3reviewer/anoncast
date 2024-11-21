@@ -10,7 +10,9 @@ const redis = new Redis(process.env.REDIS_URL as string)
 export const merkleTreeRoutes = createElysia({ prefix: '/merkle-tree' }).post(
   '/',
   async ({ body }) => {
-    const cachedTree = await redis.get(`anon:tree:${body.tokenAddress}:${body.proofType}`)
+    const cachedTree = await redis.get(
+      `anon:tree:sale:${body.tokenAddress}:${body.proofType}`
+    )
     if (cachedTree) {
       return JSON.parse(cachedTree)
     }
@@ -30,7 +32,7 @@ export const merkleTreeRoutes = createElysia({ prefix: '/merkle-tree' }).post(
     })
 
     await redis.set(
-      `anon:tree:${body.tokenAddress}:${body.proofType}`,
+      `anon:tree:sale:${body.tokenAddress}:${body.proofType}`,
       JSON.stringify(tree),
       'EX',
       60 * 10
