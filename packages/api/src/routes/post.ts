@@ -23,6 +23,9 @@ export const postRoutes = createElysia({ prefix: '/posts' })
         type: t.Enum(ProofType),
         proof: t.Array(t.Number()),
         publicInputs: t.Array(t.Array(t.Number())),
+        args: t.Object({
+          asReply: t.Optional(t.Boolean()),
+        }),
       }),
     }
   )
@@ -39,11 +42,6 @@ export const postRoutes = createElysia({ prefix: '/posts' })
       }
 
       const params = extractCreatePostData(body.publicInputs)
-      if (params.timestamp < Date.now() / 1000 - 600) {
-        return {
-          success: false,
-        }
-      }
 
       return await neynar.post(params)
     },
@@ -67,11 +65,6 @@ export const postRoutes = createElysia({ prefix: '/posts' })
       }
 
       const params = extractSubmitHashData(body.publicInputs)
-      if (params.timestamp < Date.now() / 1000 - 600) {
-        return {
-          success: false,
-        }
-      }
 
       return await neynar.delete(params)
     },
@@ -95,11 +88,6 @@ export const postRoutes = createElysia({ prefix: '/posts' })
       }
 
       const params = extractSubmitHashData(body.publicInputs)
-      if (params.timestamp < Date.now() / 1000 - 600) {
-        return {
-          success: false,
-        }
-      }
 
       const mapping = await getPostMapping(params.hash)
       if (mapping?.tweetId) {
@@ -115,7 +103,7 @@ export const postRoutes = createElysia({ prefix: '/posts' })
         }
       }
 
-      const tweetId = await promoteToTwitter(cast.cast)
+      const tweetId = await promoteToTwitter(cast.cast, body.args?.asReply)
 
       if (!tweetId) {
         return {
@@ -134,6 +122,11 @@ export const postRoutes = createElysia({ prefix: '/posts' })
       body: t.Object({
         proof: t.Array(t.Number()),
         publicInputs: t.Array(t.Array(t.Number())),
+        args: t.Optional(
+          t.Object({
+            asReply: t.Boolean(),
+          })
+        ),
       }),
     }
   )

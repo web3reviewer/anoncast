@@ -24,7 +24,7 @@ type PromoteState =
 interface PostContextProps {
   deletePost: (hash: string) => Promise<void>
   deleteState: DeleteState
-  promotePost: (hash: string) => Promise<void>
+  promotePost: (hash: string, asReply?: boolean) => Promise<void>
   promoteState: PromoteState
 }
 
@@ -108,7 +108,7 @@ export const PostProvider = ({
     }
   }
 
-  const promotePost = async (hash: string) => {
+  const promotePost = async (hash: string, asReply?: boolean) => {
     if (!userAddress) return
 
     setPromoteState({ status: 'signature' })
@@ -146,13 +146,15 @@ export const PostProvider = ({
       if (process.env.DISABLE_QUEUE) {
         await api.promotePost(
           Array.from(proof.proof),
-          proof.publicInputs.map((i) => Array.from(i))
+          proof.publicInputs.map((i) => Array.from(i)),
+          { asReply }
         )
       } else {
         await api.submitAction(
           ProofType.PROMOTE_POST,
           Array.from(proof.proof),
-          proof.publicInputs.map((i) => Array.from(i))
+          proof.publicInputs.map((i) => Array.from(i)),
+          { asReply }
         )
       }
 
