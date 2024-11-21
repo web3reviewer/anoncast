@@ -83,10 +83,6 @@ async function handle(data: QueueArgs) {
   }
 }
 
-run()
-  .catch((e) => {
-    console.error(e)
-  })
-  .finally(() => {
-    process.exit(0)
-  })
+run().catch((e) => {
+  console.error(e)
+})
