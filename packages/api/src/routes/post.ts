@@ -42,11 +42,6 @@ export function getPostRoutes(createPostBackend: Noir, submitHashBackend: Noir) 
         }
 
         const params = extractCreatePostData(body.publicInputs)
-        if (params.timestamp < Date.now() / 1000 - 600) {
-          return {
-            success: false,
-          }
-        }
 
         return await neynar.post(params)
       },
@@ -69,11 +64,6 @@ export function getPostRoutes(createPostBackend: Noir, submitHashBackend: Noir) 
         }
 
         const params = extractSubmitHashData(body.publicInputs)
-        if (params.timestamp < Date.now() / 1000 - 600) {
-          return {
-            success: false,
-          }
-        }
 
         return await neynar.delete(params)
       },
@@ -96,11 +86,6 @@ export function getPostRoutes(createPostBackend: Noir, submitHashBackend: Noir) 
         }
 
         const params = extractSubmitHashData(body.publicInputs)
-        if (params.timestamp < Date.now() / 1000 - 600) {
-          return {
-            success: false,
-          }
-        }
 
         const mapping = await getPostMapping(params.hash)
         if (mapping?.tweetId) {
