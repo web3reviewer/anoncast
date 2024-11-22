@@ -135,9 +135,11 @@ export function getPostRoutes(createPostBackend: Noir, submitHashBackend: Noir) 
         body: t.Object({
           proof: t.Array(t.Number()),
           publicInputs: t.Array(t.Array(t.Number())),
-          args: t.Object({
-            asReply: t.Optional(t.Boolean()),
-          }),
+          args: t.Optional(
+            t.Object({
+              asReply: t.Boolean(),
+            })
+          ),
         }),
       }
     )
