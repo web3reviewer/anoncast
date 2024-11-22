@@ -116,7 +116,7 @@ export function getPostRoutes(createPostBackend: Noir, submitHashBackend: Noir) 
           }
         }
 
-        const tweetId = await promoteToTwitter(cast.cast)
+        const tweetId = await promoteToTwitter(cast.cast, body.args?.asReply)
 
         if (!tweetId) {
           return {
@@ -135,6 +135,9 @@ export function getPostRoutes(createPostBackend: Noir, submitHashBackend: Noir) 
         body: t.Object({
           proof: t.Array(t.Number()),
           publicInputs: t.Array(t.Array(t.Number())),
+          args: t.Object({
+            asReply: t.Optional(t.Boolean()),
+          }),
         }),
       }
     )
