@@ -52,18 +52,24 @@ async function fetchHolders(args: BuildTreeArgs) {
       'X-API-KEY': process.env.SIMPLEHASH_API_KEY ?? '',
     }
 
-    const response = await fetch(url, { headers })
-    const res: {
-      next_cursor: string
-      owners: Array<{
-        fungible_id: string
-        owner_address: string
-        quantity: number
-        quantity_string: string
-        first_transferred_date: string
-        last_transferred_date: string
-      }>
-    } = await response.json()
+    let retries = 5
+    let delay = 1000
+    let response
+
+    while (retries > 0) {
+      try {
+        response = await fetch(url, { headers })
+        if (response.ok) break
+        throw new Error(`HTTP error! status: ${response.status}`)
+      } catch (error) {
+        retries--
+        if (retries === 0) throw error
+        await new Promise((resolve) => setTimeout(resolve, delay))
+        delay *= 2
+      }
+    }
+
+    const res = await response!.json()
 
     let shouldBreak = false
     for (const owner of res.owners) {
