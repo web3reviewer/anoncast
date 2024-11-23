@@ -1,5 +1,9 @@
 import { buildMimc7 as buildMimc } from 'circomlibjs'
 import { MerkleTreeMiMC, MiMC7 } from '../proofs/merkle-tree'
+import { Redis } from 'ioredis'
+import { ProofType, Tree } from '../proofs'
+
+const redis = new Redis(process.env.REDIS_URL as string)
 
 interface BuildTreeArgs {
   tokenAddress: string
@@ -91,4 +95,13 @@ async function fetchHolders(args: BuildTreeArgs) {
   }
 
   return owners
+}
+
+export async function getTree(tokenAddress: string, proofType: ProofType): Promise<Tree> {
+  const tree = await redis.get(`anon:tree:${tokenAddress}:${proofType}`)
+  return tree ? JSON.parse(tree) : null
+}
+
+export async function setTree(tokenAddress: string, proofType: ProofType, tree: Tree) {
+  await redis.set(`anon:tree:${tokenAddress}:${proofType}`, JSON.stringify(tree))
 }

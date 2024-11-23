@@ -8,6 +8,7 @@ import { promoteToTwitter } from '../services/twitter'
 import { createPostMapping, getPostMapping } from '@anon/db'
 import { getQueue, QueueName } from '@anon/queue/src/utils'
 import { Noir } from '@noir-lang/noir_js'
+import { getTree } from '@anon/utils/src/merkle-tree'
 
 export function getPostRoutes(createPostBackend: Noir, submitHashBackend: Noir) {
   return createElysia({ prefix: '/posts' })
@@ -40,8 +41,12 @@ export function getPostRoutes(createPostBackend: Noir, submitHashBackend: Noir) 
         if (!isValid) {
           throw new Error('Invalid proof')
         }
-
         const params = extractCreatePostData(body.publicInputs)
+
+        const tree = await getTree(params.tokenAddress, ProofType.CREATE_POST)
+        if (!tree || tree.root !== params.root) {
+          throw new Error('Invalid root')
+        }
 
         return await neynar.post(params)
       },
@@ -65,6 +70,11 @@ export function getPostRoutes(createPostBackend: Noir, submitHashBackend: Noir) 
 
         const params = extractSubmitHashData(body.publicInputs)
 
+        const tree = await getTree(params.tokenAddress, ProofType.DELETE_POST)
+        if (!tree || tree.root !== params.root) {
+          throw new Error('Invalid root')
+        }
+
         return await neynar.delete(params)
       },
       {
@@ -86,6 +96,11 @@ export function getPostRoutes(createPostBackend: Noir, submitHashBackend: Noir) 
         }
 
         const params = extractSubmitHashData(body.publicInputs)
+
+        const tree = await getTree(params.tokenAddress, ProofType.PROMOTE_POST)
+        if (!tree || tree.root !== params.root) {
+          throw new Error('Invalid root')
+        }
 
         const mapping = await getPostMapping(params.hash)
         if (mapping?.tweetId) {

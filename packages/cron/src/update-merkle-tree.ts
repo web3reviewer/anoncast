@@ -23,7 +23,7 @@ async function buildAndCacheTree(
   const tree = await buildHoldersTree({ tokenAddress, minAmount })
   console.log(proofType, tree.root)
   await redis.set(
-    `anon:tree:sale:${tokenAddress}:${proofType}`,
+    `anon:tree:${tokenAddress}:${proofType}`,
     JSON.stringify(tree),
     'EX',
     60 * 5
