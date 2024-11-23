@@ -155,6 +155,26 @@ export function Post({
   canDelete: boolean
   canPromote: boolean
 }) {
+  const cleanText = (text: string) => {
+    if (!text) return ''
+
+    // Split text into characters and only normalize those that look suspicious
+    return text
+      .split('')
+      .map((char) => {
+        // Check if char is in a problematic Unicode range or looks unusual
+        if (!/^[\x20-\x7E]$/.test(char)) {
+          // Only normalize suspicious characters
+          return char.normalize('NFKC')
+        }
+        return char
+      })
+      .join('')
+  }
+
+  // Usage in component
+  const sanitizedText = cleanText(cast.text)
+
   return (
     <div className="relative [overflow-wrap:anywhere] bg-[#111111] rounded-xl overflow-hidden">
       <a
@@ -164,7 +184,7 @@ export function Post({
       >
         <div className="flex flex-row gap-4 border p-4 sm:p-6 rounded-xl">
           <div className="flex flex-col gap-2 w-full">
-            <div className=" font-medium">{cast.text}</div>
+            <div className=" font-medium whitespace-pre-wrap">{sanitizedText}</div>
             {cast.embeds.map((embed) => {
               if (embed.metadata?.image) {
                 return (
