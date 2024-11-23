@@ -13,7 +13,7 @@ interface BuildTreeArgs {
 
 export async function buildHoldersTree(args: BuildTreeArgs) {
   const mimc = await buildMimc()
-  const merkleTree = new MerkleTreeMiMC(12, mimc)
+  const merkleTree = new MerkleTreeMiMC(13, mimc)
 
   const owners = await fetchHolders(args)
   for (const owner of owners) {
@@ -57,7 +57,6 @@ async function fetchHolders(args: BuildTreeArgs) {
     }
 
     let retries = 5
-    let delay = 1000
     let response
 
     while (retries > 0) {
@@ -68,8 +67,9 @@ async function fetchHolders(args: BuildTreeArgs) {
       } catch (error) {
         retries--
         if (retries === 0) throw error
-        await new Promise((resolve) => setTimeout(resolve, delay))
-        delay *= 2
+        const delay = parseInt(response?.headers.get('Retry-After') ?? '5')
+        console.log(`Retrying in ${delay} seconds...`)
+        await new Promise((resolve) => setTimeout(resolve, delay * 1000))
       }
     }
 
