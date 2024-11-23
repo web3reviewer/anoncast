@@ -35,35 +35,35 @@ export default function ActionComponent({
   const DELETE_POST = BigInt(TOKEN_CONFIG[ANON_ADDRESS].deleteAmount) / BigInt(10 ** 18)
 
   return (
-    <Alert className="flex flex-col gap-4 bg-[#111111]">
+    <Alert className="flex flex-col gap-4 bg-zinc-900 border border-zinc-700">
       <AlertTitle className="font-semibold text-xl">
         Post anonymously to Farcaster and X/Twitter
       </AlertTitle>
       <AlertDescription>
-        <p className="text-gray-400">
+        <p className="text-zinc-400">
           Posts are made anonymous using zk proofs. Due to the complex calculations
           required, it could take up to a few minutes to post and take other actions.
           We&apos;ll work on speeding this up in the future.
         </p>
         <br />
-        <p className="text-gray-400 ">Requirements:</p>
+        <p className="text-zinc-400 ">Holder requirements:</p>
         <ul className="flex flex-col gap-1 mt-3">
           <TokenRequirement
             tokenAmount={data}
             tokenNeeded={FARCASTER_POST}
-            string="Hold 10,000 $ANON: Post on Farcaster"
+            string="10,000 $ANON: Post on Farcaster"
             isConnected={!!userAddress}
           />
           <TokenRequirement
             tokenAmount={data}
             tokenNeeded={TWITTER_PROMOTE}
-            string="Hold 1,000,000 $ANON: Promote posts to X/Twitter"
+            string="1,000,000 $ANON: Promote posts to X/Twitter"
             isConnected={!!userAddress}
           />
           <TokenRequirement
             tokenAmount={data}
             tokenNeeded={DELETE_POST}
-            string="Hold 1,000,000 $ANON: Delete posts"
+            string="1,000,000 $ANON: Delete posts"
             isConnected={!!userAddress}
           />
         </ul>
@@ -77,7 +77,7 @@ export default function ActionComponent({
             className="text-sm decoration-dotted underline font-medium"
           >
             <span className="hidden sm:inline">X/Twitter</span>
-            <img src="/xLogo.png" alt="X/Twitter" className="w-4 h-4 sm:hidden" />
+            <img src="/x.svg" alt="X/Twitter" className="w-4 h-4 sm:hidden invert" />
           </a>
 
           <a
@@ -87,7 +87,11 @@ export default function ActionComponent({
             className="text-sm decoration-dotted underline font-medium"
           >
             <span className="hidden sm:inline">Farcaster</span>
-            <img src="/warpcastLogo.png" alt="Farcaster" className="w-4 h-4 sm:hidden" />
+            <img
+              src="/farcaster.svg"
+              alt="Farcaster"
+              className="w-4 h-4 sm:hidden invert"
+            />
           </a>
         </div>
 
@@ -143,7 +147,7 @@ function TokenRequirement({
   const tokenAmountInTokens = tokenAmount ? tokenAmount / BigInt(10 ** 18) : BigInt(0)
 
   return (
-    <li className="flex flex-row items-center gap-2 font-medium">
+    <li className="flex flex-row items-center gap-2 font-medium text-xs sm:text-base">
       {isConnected ? (
         tokenAmountInTokens >= tokenNeeded ? (
           <CircleCheckIcon className="text-green-500 w-4 h-4" />
@@ -153,7 +157,7 @@ function TokenRequirement({
       ) : (
         <CircleMinusIcon className="text-gray-400 w-4 h-4" />
       )}
-      <b>{string}</b>
+      <p>{string}</p>
     </li>
   )
 }
