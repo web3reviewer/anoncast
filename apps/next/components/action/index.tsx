@@ -51,19 +51,20 @@ export default function ActionComponent({
           <TokenRequirement
             tokenAmount={data}
             tokenNeeded={FARCASTER_POST}
-            string="1,000 $ANON: Post on Farcaster"
+            oldTokenNeeded={FARCASTER_POST * BigInt(10 ** 2)}
+            string="Post on Farcaster"
             isConnected={!!userAddress}
           />
           <TokenRequirement
             tokenAmount={data}
             tokenNeeded={TWITTER_PROMOTE}
-            string="1,000,000 $ANON: Promote posts to X/Twitter"
+            string="Promote posts to X/Twitter"
             isConnected={!!userAddress}
           />
           <TokenRequirement
             tokenAmount={data}
             tokenNeeded={DELETE_POST}
-            string="1,000,000 $ANON: Delete posts"
+            string="Delete posts"
             isConnected={!!userAddress}
           />
         </ul>
@@ -136,11 +137,13 @@ export default function ActionComponent({
 function TokenRequirement({
   tokenAmount,
   tokenNeeded,
+  oldTokenNeeded,
   string,
   isConnected,
 }: {
   tokenAmount: bigint | undefined
   tokenNeeded: bigint
+  oldTokenNeeded: bigint | undefined
   string: string
   isConnected: boolean
 }) {
@@ -157,7 +160,15 @@ function TokenRequirement({
       ) : (
         <CircleMinusIcon className="text-gray-400 w-4 h-4" />
       )}
-      <p>{string}</p>
+      <p>
+        {oldTokenNeeded && (
+          <>
+            <span className="line-through text-zinc-500">{`${oldTokenNeeded.toLocaleString()}`}</span>
+            <span>{'  '}</span>
+          </>
+        )}
+        {`${tokenNeeded.toLocaleString()} $ANON: ${string}`}
+      </p>
     </li>
   )
 }
