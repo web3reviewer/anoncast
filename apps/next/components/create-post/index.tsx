@@ -85,7 +85,8 @@ export function CreatePost({
 }
 
 function CreatePostForm() {
-  const { text, setText, createPost, state } = useCreatePost()
+  const { text, setText, createPost, state, quote, embed, setEmbed, setQuote } =
+    useCreatePost()
   const { toast } = useToast()
   const [confetti, setConfetti] = useState(false)
 
@@ -94,6 +95,48 @@ function CreatePostForm() {
   const handleSetText = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     if (new Blob([e.target.value]).size > 320) return
     setText(e.target.value)
+
+    // Check for Warpcast URLs
+    const warpcastRegex = /https:\/\/warpcast\.com\/[^/]+\/0x[a-fA-F0-9]+/g
+    const warpcastMatches = Array.from(e.target.value.matchAll(warpcastRegex) || []).map(
+      (match) => match[0]
+    )
+
+    // Check for Twitter URLs
+    const twitterRegex = /https:\/\/(twitter\.com|x\.com)\/[^/]+\/status\/\d+/g
+    const twitterMatches = Array.from(e.target.value.matchAll(twitterRegex) || []).map(
+      (match) => match[0]
+    )
+
+    // Try to set quote from Warpcast URLs
+    if (warpcastMatches.length > 0) {
+      const currentHash = quote?.hash
+      const urlHash = warpcastMatches[0].split('/').pop() // Get hash from URL
+
+      if (!quote || currentHash !== urlHash) {
+        // If no quote exists or URL hash changed, try to set a new one
+        api.getCast(warpcastMatches[0]).then((cast) => {
+          if (cast) {
+            setQuote(cast)
+          }
+        })
+      }
+    } else {
+      // Clear quote if no Warpcast URLs
+      setQuote(null)
+    }
+    // Handle Twitter URLs
+    if (twitterMatches.length > 0) {
+      const currentEmbed = embed
+      const twitterUrl = twitterMatches[0]
+
+      if (!currentEmbed || currentEmbed !== twitterUrl) {
+        setEmbed(twitterUrl)
+      }
+    } else {
+      // Clear embed if no Twitter URLs
+      setEmbed(null)
+    }
   }
 
   const handleCreatePost = async () => {
@@ -384,7 +427,15 @@ function RemoveableEmbed() {
 
   return (
     <div className="relative">
-      <div className="w-full border rounded-xl overflow-hidden">
+      <div
+        className="w-full border rounded-xl overflow-hidden cursor-pointer"
+        onClick={() => window.open(embed, '_blank')}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') {
+            window.open(embed, '_blank')
+          }
+        }}
+      >
         {image && (
           <img
             src={image}
