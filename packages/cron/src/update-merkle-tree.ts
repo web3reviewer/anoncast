@@ -1,9 +1,4 @@
-import {
-  buildHoldersTree,
-  getTree,
-  setLastTree,
-  setTree,
-} from '@anon/utils/src/merkle-tree'
+import { buildHoldersTree, setTree } from '@anon/utils/src/merkle-tree'
 import { TOKEN_CONFIG, ANON_ADDRESS } from '@anon/utils/src/config'
 import { ProofType } from '@anon/utils/src/proofs'
 
@@ -23,9 +18,7 @@ async function buildAndCacheTree(
   proofType: ProofType,
   minAmount: string
 ) {
-  const currentTree = await getTree(tokenAddress, proofType)
   const nextTree = await buildHoldersTree({ tokenAddress, minAmount })
   console.log(proofType, nextTree.root)
   await setTree(tokenAddress, proofType, nextTree)
-  await setLastTree(tokenAddress, proofType, currentTree)
 }

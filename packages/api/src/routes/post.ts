@@ -8,7 +8,7 @@ import { promoteToTwitter } from '../services/twitter'
 import { createPostMapping, getPostMapping } from '@anon/db'
 import { getQueue, QueueName } from '@anon/queue/src/utils'
 import { Noir } from '@noir-lang/noir_js'
-import { getLastTree, getTree } from '@anon/utils/src/merkle-tree'
+import { getValidRoots } from '@anon/utils/src/merkle-tree'
 
 export function getPostRoutes(createPostBackend: Noir, submitHashBackend: Noir) {
   return createElysia({ prefix: '/posts' })
@@ -211,15 +211,12 @@ function extractSubmitHashData(data: number[][]): SubmitHashParams {
 }
 
 async function validateRoot(type: ProofType, tokenAddress: string, root: string) {
-  const tree = await getTree(tokenAddress, type)
-  if (!tree) {
-    throw new Error('Tree not found')
+  const validRoots = await getValidRoots(tokenAddress, type)
+  if (!validRoots.length) {
+    throw new Error('No valid roots found')
   }
 
-  if (tree.root !== root) {
-    const lastTree = await getLastTree(tokenAddress, type)
-    if (!lastTree || lastTree.root !== root) {
-      throw new Error('Invalid root')
-    }
+  if (!validRoots.includes(root)) {
+    throw new Error('Invalid root')
   }
 }

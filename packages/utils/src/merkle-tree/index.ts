@@ -104,20 +104,23 @@ export async function getTree(tokenAddress: string, proofType: ProofType): Promi
 
 export async function setTree(tokenAddress: string, proofType: ProofType, tree: Tree) {
   await redis.set(`anon:tree:${tokenAddress}:${proofType}`, JSON.stringify(tree))
+  await addRoot(tokenAddress, proofType, tree.root)
 }
 
-export async function getLastTree(
-  tokenAddress: string,
-  proofType: ProofType
-): Promise<Tree> {
-  const tree = await redis.get(`anon:last-tree:${tokenAddress}:${proofType}`)
-  return tree ? JSON.parse(tree) : null
-}
-
-export async function setLastTree(
+export async function addRoot(
   tokenAddress: string,
   proofType: ProofType,
-  tree: Tree
+  root: string,
+  maxRoots = 5
 ) {
-  await redis.set(`anon:last-tree:${tokenAddress}:${proofType}`, JSON.stringify(tree))
+  const key = `anon:roots:${tokenAddress}:${proofType}`
+  await redis.lpush(key, root)
+  await redis.ltrim(key, 0, maxRoots - 1)
+}
+
+export async function getValidRoots(
+  tokenAddress: string,
+  proofType: ProofType
+): Promise<string[]> {
+  return redis.lrange(`anon:roots:${tokenAddress}:${proofType}`, 0, -1)
 }
