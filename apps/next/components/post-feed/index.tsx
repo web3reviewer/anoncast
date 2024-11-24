@@ -17,22 +17,28 @@ import { PostProvider, usePost } from './context'
 import { useToast } from '@/hooks/use-toast'
 import { Heart, Loader2, MessageSquare, RefreshCcw } from 'lucide-react'
 import { useState } from 'react'
-import { useSignMessage } from 'wagmi'
 import { api } from '@/lib/api'
 import { Checkbox } from '../ui/checkbox'
 import AnimatedTabs from './animated-tabs'
 import { Skeleton } from '../ui/skeleton'
+import { useCreatePost } from '../create-post/context'
+
+function formatNumber(num: number): string {
+  if (num < 1000) return num.toString()
+  const units = ['K', 'M', 'B', 'T']
+  const unitIndex = Math.floor(Math.log10(num) / 3) - 1
+  const unitValue = 1000 ** (unitIndex + 1)
+  const formattedNumber = (num / unitValue).toFixed(1)
+  return `${formattedNumber}${units[unitIndex]}`
+}
 
 export default function PostFeed({
   tokenAddress,
-  userAddress,
 }: {
   tokenAddress: string
-  userAddress?: string
 }) {
   const [selected, setSelected] = useState<'new' | 'trending'>('trending')
-  const { data: balance } = useBalance(tokenAddress, userAddress)
-  const { signMessageAsync } = useSignMessage()
+  const { data: balance } = useBalance(tokenAddress)
 
   const { data: trendingPosts, isLoading: isTrendingLoading } = useQuery({
     queryKey: ['trending', tokenAddress],
@@ -50,40 +56,14 @@ export default function PostFeed({
     },
   })
 
-  const getSignature = async ({
-    address,
-    timestamp,
-  }: {
-    address: string
-    timestamp: number
-  }) => {
-    try {
-      const message = `${address}:${timestamp}`
-      const signature = await signMessageAsync({
-        message,
-      })
-      return { signature, message }
-    } catch {
-      return
-    }
-  }
-
   const canDelete =
-    !!userAddress &&
-    !!balance &&
-    balance >= BigInt(TOKEN_CONFIG[tokenAddress].deleteAmount)
+    !!balance && balance >= BigInt(TOKEN_CONFIG[tokenAddress].deleteAmount)
 
   const canPromote =
-    !!userAddress &&
-    !!balance &&
-    balance >= BigInt(TOKEN_CONFIG[tokenAddress].promoteAmount)
+    !!balance && balance >= BigInt(TOKEN_CONFIG[tokenAddress].promoteAmount)
 
   return (
-    <PostProvider
-      tokenAddress={tokenAddress}
-      userAddress={userAddress}
-      getSignature={getSignature}
-    >
+    <PostProvider tokenAddress={tokenAddress}>
       <div className="flex flex-col gap-4 ">
         <div className="flex flex-row justify-between">
           <AnimatedTabs
@@ -165,6 +145,7 @@ export function Post({
   canDelete: boolean
   canPromote: boolean
 }) {
+  const { setParent, setQuote } = useCreatePost()
   const cleanText = (text: string) => {
     if (!text) return ''
 
@@ -180,6 +161,16 @@ export function Post({
         return char
       })
       .join('')
+  }
+
+  const reply = () => {
+    setParent(cast)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  const quote = () => {
+    setQuote(cast)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   // Usage in component
@@ -269,15 +260,21 @@ export function Post({
 
                 <div className="flex flex-row items-center gap-1.5 ">
                   <MessageSquare size={16} className="text-zinc-400" />
-                  <p className="text-sm font-medium">{cast.replies.count}</p>
+                  <p className="text-sm font-medium">
+                    {formatNumber(cast.replies.count)}
+                  </p>
                 </div>
                 <div className="flex flex-row items-center gap-1.5 ">
                   <RefreshCcw size={16} className="text-zinc-400" />
-                  <p className="text-sm font-medium ">{cast.reactions.recasts_count}</p>
+                  <p className="text-sm font-medium ">
+                    {formatNumber(cast.reactions.recasts_count)}
+                  </p>
                 </div>
                 <div className="flex flex-row items-center gap-1.5 w-16">
                   <Heart size={16} className="text-zinc-400" />
-                  <p className="text-sm font-medium">{cast.reactions.likes_count}</p>
+                  <p className="text-sm font-medium">
+                    {formatNumber(cast.reactions.likes_count)}
+                  </p>
                 </div>
               </div>
 
@@ -286,8 +283,22 @@ export function Post({
                 onClick={(e) => e.preventDefault()}
                 onKeyDown={(e) => e.preventDefault()}
               >
-                {canDelete && <DeleteButton cast={cast} />}
+                <p
+                  className="text-sm underline decoration-dotted font-semibold cursor-pointer hover:text-zinc-400"
+                  onClick={quote}
+                  onKeyDown={quote}
+                >
+                  Quote
+                </p>
+                <p
+                  className="text-sm underline decoration-dotted font-semibold cursor-pointer hover:text-zinc-400"
+                  onClick={reply}
+                  onKeyDown={reply}
+                >
+                  Reply
+                </p>
                 {canPromote && <PromoteButton cast={cast} />}
+                {canDelete && <DeleteButton cast={cast} />}
               </div>
             </div>
           </div>
