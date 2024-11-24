@@ -5,10 +5,11 @@ import { zeroAddress } from 'viem'
 import { CreatePostParams, SubmitHashParams } from '../services/types'
 import { neynar } from '../services/neynar'
 import { promoteToTwitter, twitterClient } from '../services/twitter'
-import { createPostMapping, getPostMapping } from '@anon/db'
+import { createPostMapping, deletePostMapping, getPostMapping } from '@anon/db'
 import { getQueue, QueueName } from '@anon/queue/src/utils'
 import { Noir } from '@noir-lang/noir_js'
 import { getValidRoots } from '@anon/utils/src/merkle-tree'
+import { augmentCasts } from './feed'
 
 export function getPostRoutes(createPostBackend: Noir, submitHashBackend: Noir) {
   return createElysia({ prefix: '/posts' })
@@ -81,6 +82,8 @@ export function getPostRoutes(createPostBackend: Noir, submitHashBackend: Noir) 
             })
           }
         }
+
+        await deletePostMapping(params.hash)
 
         return {
           success: true,
@@ -155,6 +158,23 @@ export function getPostRoutes(createPostBackend: Noir, submitHashBackend: Noir) 
               asReply: t.Boolean(),
             })
           ),
+        }),
+      }
+    )
+    .get(
+      '/:hash',
+      async ({ params, error }) => {
+        const cast = await neynar.getCast(params.hash)
+        if (!cast?.cast) {
+          return error(404, 'Cast not found')
+        }
+
+        const revealedCast = await augmentCasts([cast.cast])
+        return revealedCast[0]
+      },
+      {
+        params: t.Object({
+          hash: t.String(),
         }),
       }
     )
