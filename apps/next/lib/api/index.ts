@@ -103,11 +103,19 @@ export const api = {
     message: string,
     revealPhrase: string,
     signature: string,
-    address: string
+    address: string,
+    tokenAddress: string
   ) => {
     const response = await apiClient.request<{ success: boolean }>(`/posts/reveal`, {
       method: 'POST',
-      body: JSON.stringify({ castHash, message, revealPhrase, signature, address }),
+      body: JSON.stringify({
+        castHash,
+        message,
+        revealPhrase,
+        signature,
+        address,
+        tokenAddress,
+      }),
     })
     return response.data
   },

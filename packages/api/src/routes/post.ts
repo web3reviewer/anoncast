@@ -190,12 +190,24 @@ export function getPostRoutes(createPostBackend: Noir, submitHashBackend: Noir) 
           }
         }
 
+        const address = body.address.toLowerCase()
+        const users = await neynar.getBulkUsers([address])
+
         await markPostReveal(
           body.castHash,
           body.revealPhrase,
           body.signature,
           body.address
         )
+
+        const username = users?.[address]?.[0]?.username
+
+        await neynar.post({
+          text: `REVEALED: Posted by ${username ? `@${username}` : `${address}`}`,
+          embeds: [`https://anoncast.org/posts/${body.castHash}`],
+          quote: body.castHash,
+          tokenAddress: body.tokenAddress,
+        })
 
         return {
           success: true,
@@ -208,6 +220,7 @@ export function getPostRoutes(createPostBackend: Noir, submitHashBackend: Noir) 
           revealPhrase: t.String(),
           signature: t.String(),
           address: t.String(),
+          tokenAddress: t.String(),
         }),
       }
     )
