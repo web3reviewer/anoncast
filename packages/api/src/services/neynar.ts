@@ -19,11 +19,13 @@ const redis = new Redis(process.env.REDIS_URL as string)
 
 class NeynarService {
   private readonly apiKey: string
+  private readonly anonfunApiKey: string
   private readonly baseUrl = 'https://api.neynar.com/v2'
   private static instance: NeynarService
 
-  private constructor(apiKey: string) {
+  private constructor(apiKey: string, anonfunApiKey: string) {
     this.apiKey = apiKey
+    this.anonfunApiKey = anonfunApiKey
   }
 
   static getInstance(): NeynarService {
@@ -32,7 +34,11 @@ class NeynarService {
       if (!apiKey) {
         throw new Error('NEYNAR_API_KEY environment variable is not set')
       }
-      NeynarService.instance = new NeynarService(apiKey)
+      const anonfunApiKey = process.env.NEYNAR_API_KEY_ANONFUN
+      if (!anonfunApiKey) {
+        throw new Error('NEYNAR_API_KEY_ANONFUN environment variable is not set')
+      }
+      NeynarService.instance = new NeynarService(apiKey, anonfunApiKey)
     }
     return NeynarService.instance
   }
@@ -44,16 +50,17 @@ class NeynarService {
       maxRetries?: number
       retryDelay?: number
       body?: string
+      anonfun?: boolean
     }
   ): Promise<T> {
-    const { maxRetries = 1, retryDelay = 10000, method, body } = options ?? {}
+    const { maxRetries = 1, retryDelay = 10000, method, body, anonfun } = options ?? {}
     let retries = 0
 
     while (retries < maxRetries) {
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
         Accept: 'application/json',
-        'X-API-KEY': this.apiKey,
+        'X-API-KEY': anonfun ? this.anonfunApiKey : this.apiKey,
       }
       const response = await fetch(`${this.baseUrl}${endpoint}`, {
         headers,
@@ -181,6 +188,7 @@ class NeynarService {
     const response = await this.makeRequest<PostCastResponse>('/farcaster/cast', {
       method: 'POST',
       body: JSON.stringify(body),
+      anonfun: params.launchSigner,
     })
 
     if (!response.success) {
