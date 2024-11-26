@@ -105,12 +105,11 @@ export const feedRoutes = createElysia({ prefix: '/feed' })
       if (cached) {
         response = JSON.parse(cached)
       } else {
-        const searchResponse = await neynar.searchCasts(
-          TOKEN_CONFIG[params.tokenAddress].fid,
-          'clanker'
+        const searchResponse = await neynar.getUserCasts(
+          TOKEN_CONFIG[params.tokenAddress].fid
         )
-        response = searchResponse.result.casts.filter(({ text }) =>
-          text.includes('@clanker')
+        response = searchResponse.casts.filter(({ text }) =>
+          text.toLowerCase().includes('@clanker')
         )
         await redis.set(
           `launches:new:${params.tokenAddress}`,
