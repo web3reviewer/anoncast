@@ -8,7 +8,7 @@ import type {
   UploadImageResponse,
 } from '../types'
 import { ApiClient } from './client'
-import { Identity } from '@anon/api/src/services/types'
+import type { Identity } from '@anon/api/src/services/types'
 
 const apiClient = new ApiClient(process.env.NEXT_PUBLIC_API_URL || '')
 
@@ -22,6 +22,18 @@ export const api = {
   getTrendingPosts: async (tokenAddress: string) => {
     const response = await apiClient.request<GetCastsResponse>(
       `/feed/${tokenAddress}/trending`
+    )
+    return response.data
+  },
+  getNewLaunches: async (tokenAddress: string) => {
+    const response = await apiClient.request<GetCastsResponse>(
+      `/feed/${tokenAddress}/launches/new`
+    )
+    return response.data
+  },
+  getPromotedLaunches: async (tokenAddress: string) => {
+    const response = await apiClient.request<GetCastsResponse>(
+      `/feed/${tokenAddress}/launches/promoted`
     )
     return response.data
   },
@@ -60,13 +72,20 @@ export const api = {
   promotePost: async (
     proof: number[],
     publicInputs: number[][],
-    args: { asReply?: boolean }
+    args: { asReply?: boolean; asLaunch?: boolean }
   ) => {
     const response = await apiClient.request<
       { success: false } | { success: true; tweetId: string }
     >(`/posts/promote`, {
       method: 'POST',
       body: JSON.stringify({ proof, publicInputs, args }),
+    })
+    return response.data
+  },
+  launchPost: async (proof: number[], publicInputs: number[][]) => {
+    const response = await apiClient.request<PostCastResponse>(`/posts/launch`, {
+      method: 'POST',
+      body: JSON.stringify({ proof, publicInputs }),
     })
     return response.data
   },
