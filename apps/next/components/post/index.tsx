@@ -68,7 +68,8 @@ export function Post({
     !!balance &&
     balance >= BigInt(TOKEN_CONFIG[tokenAddress].launchAmount) &&
     !cast.launchHash &&
-    variant === 'anonfun'
+    variant === 'anonfun' &&
+    cast.hash !== '0x5c790f70ffe770c68248775af6f2c1fcfb29de58'
 
   const canReveal = address && !!cast.reveal && !cast.reveal.revealedAt
 
@@ -429,7 +430,7 @@ function LaunchButton({ cast, tokenAddress }: { cast: Cast; tokenAddress: string
   return (
     <AlertDialog open={open} onOpenChange={setOpen}>
       <AlertDialogTrigger asChild>
-        <p className="text-sm underline decoration-dotted font-semibold cursor-pointer hover:text-zinc-400">
+        <p className="text-sm text-green-500 underline decoration-dotted font-semibold cursor-pointer hover:text-green-400">
           Launch
         </p>
       </AlertDialogTrigger>
