@@ -1,6 +1,6 @@
 import { createElysia } from '../utils'
 import { t } from 'elysia'
-import { ProofType, verifyProof } from '@anon/utils/src/proofs'
+import { ProofType } from '@anon/utils/src/proofs/generate'
 import { verifyMessage, zeroAddress } from 'viem'
 import { CreatePostParams, SubmitHashParams } from '../services/types'
 import { neynar } from '../services/neynar'

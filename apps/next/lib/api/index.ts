@@ -1,4 +1,4 @@
-import type { ProofType, Tree } from '@anon/utils/src/proofs'
+import type { ProofType, Tree } from '@anon/utils/src/proofs/generate'
 import type {
   Cast,
   Channel,

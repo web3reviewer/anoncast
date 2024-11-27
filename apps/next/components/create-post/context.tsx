@@ -1,9 +1,9 @@
 import { useToast } from '@/hooks/use-toast'
 import { api } from '@/lib/api'
-import type { Cast, Channel } from '@/lib/types'
-import { generateProof, ProofType } from '@anon/utils/src/proofs'
+import { Cast, Channel } from '@/lib/types'
+import { generateProof, ProofType } from '@anon/utils/src/proofs/generate'
 import { useRouter } from 'next/navigation'
-import { createContext, useContext, useState, type ReactNode } from 'react'
+import { createContext, useContext, useState, ReactNode } from 'react'
 import { hashMessage } from 'viem'
 import { useAccount, useSignMessage } from 'wagmi'
 
@@ -130,13 +130,13 @@ export const CreatePostProvider = ({
       if (process.env.NEXT_PUBLIC_DISABLE_QUEUE) {
         await api.createPost(
           Array.from(proof.proof),
-          proof.publicInputs.map((i) => Array.from(i))
+          proof.publicInputs.map((input) => Array.from(input))
         )
       } else {
         await api.submitAction(
           ProofType.CREATE_POST,
           Array.from(proof.proof),
-          proof.publicInputs.map((i) => Array.from(i)),
+          proof.publicInputs.map((input) => Array.from(input)),
           {}
         )
       }
