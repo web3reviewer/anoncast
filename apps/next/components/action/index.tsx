@@ -34,8 +34,11 @@ export default function ActionComponent({
   const defaultDescription =
     "Posts are made anonymous using zk proofs. Due to the complex calculations required, it could take up to a few minutes. Do not post porn, doxes, shills, or threats. This is not about censorship resistance - it's about great anonymous posts."
   const defaultRequirements = [
-    { amount: Number(FARCASTER_POST), label: 'Post on Farcaster' },
-    { amount: Number(TWITTER_PROMOTE), label: 'Promote posts to X/Twitter' },
+    { amount: Number(FARCASTER_POST), label: 'Post to @rawanon' },
+    {
+      amount: Number(TWITTER_PROMOTE),
+      label: 'Promote posts to @anoncast and X/Twitter',
+    },
     { amount: Number(DELETE_POST), label: 'Delete posts' },
   ]
 
