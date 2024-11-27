@@ -61,15 +61,17 @@ export function Post({
     !!balance &&
     balance >= BigInt(TOKEN_CONFIG[tokenAddress].promoteAmount) &&
     !cast.tweetId &&
-    variant === 'anoncast'
+    variant === 'anoncast' &&
+    !cast.text.match(/.*clanker.*launch.*/)
 
   const canLaunch =
     address &&
     !!balance &&
     balance >= BigInt(TOKEN_CONFIG[tokenAddress].launchAmount) &&
     !cast.launchHash &&
-    variant === 'anonfun' &&
-    cast.hash !== '0x5c790f70ffe770c68248775af6f2c1fcfb29de58'
+    ((variant === 'anonfun' &&
+      cast.hash !== '0x5c790f70ffe770c68248775af6f2c1fcfb29de58') ||
+      cast.text.match(/.*clanker.*launch.*/))
 
   const canReveal = address && !!cast.reveal && !cast.reveal.revealedAt
 
