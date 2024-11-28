@@ -65,6 +65,7 @@ export function Post({
     !cast.text.match(/.*clanker.*launch.*/)
 
   const canLaunch =
+    cast.author.fid !== TOKEN_CONFIG[tokenAddress].launchFid &&
     address &&
     !!balance &&
     balance >= BigInt(TOKEN_CONFIG[tokenAddress].launchAmount) &&
@@ -259,6 +260,16 @@ export function Post({
               )}
               {canPromote && <PromoteButton cast={cast} tokenAddress={tokenAddress} />}
               {canLaunch && <LaunchButton cast={cast} tokenAddress={tokenAddress} />}
+              {cast.launchHash && (
+                <a
+                  href={`https://warpcast.com/~/conversations/${cast.launchHash}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-sm underline decoration-dotted font-semibold cursor-pointer hover:text-zinc-400"
+                >
+                  Launched
+                </a>
+              )}
               {canDelete && <DeleteButton cast={cast} tokenAddress={tokenAddress} />}
             </div>
           </div>

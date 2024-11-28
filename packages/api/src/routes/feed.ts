@@ -79,7 +79,7 @@ export const feedRoutes = createElysia({ prefix: '/feed' })
     async ({ params }) => {
       const fid = TOKEN_CONFIG[params.tokenAddress].bestOfFid
 
-      const cached = await redis.get(`trending:data:${fid}`)
+      const cached = null
       if (cached) {
         return {
           casts: await augmentCasts(JSON.parse(cached)),
@@ -124,7 +124,7 @@ export const feedRoutes = createElysia({ prefix: '/feed' })
       } else {
         const [searchResponse1, searchResponse2] = await Promise.all([
           neynar.getUserCasts(TOKEN_CONFIG[params.tokenAddress].fid),
-          neynar.getUserCasts(TOKEN_CONFIG[params.tokenAddress].launchFid),
+          neynar.getUserCasts(TOKEN_CONFIG[params.tokenAddress].bestOfFid),
         ])
         response = searchResponse1.casts
           .concat(searchResponse2.casts)
