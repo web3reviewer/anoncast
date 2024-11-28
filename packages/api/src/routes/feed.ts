@@ -78,6 +78,14 @@ export const feedRoutes = createElysia({ prefix: '/feed' })
     '/:tokenAddress/trending',
     async ({ params }) => {
       const fid = TOKEN_CONFIG[params.tokenAddress].bestOfFid
+
+      const cached = await redis.get(`trending:${fid}`)
+      if (cached) {
+        return {
+          casts: await augmentCasts(JSON.parse(cached)),
+        }
+      }
+
       const trending = await redis.get(`trending:${fid}`)
       if (!trending) {
         return {
@@ -88,6 +96,8 @@ export const feedRoutes = createElysia({ prefix: '/feed' })
       const castsWithScores: [string, number][] = JSON.parse(trending)
       const hashes = castsWithScores.map((cast) => cast[0])
       const response = await neynar.getBulkCasts(hashes)
+
+      await redis.set(`trending:${fid}`, JSON.stringify(response.result.casts), 'EX', 30)
 
       return {
         casts: await augmentCasts(response.result.casts),
@@ -103,7 +113,7 @@ export const feedRoutes = createElysia({ prefix: '/feed' })
     '/:tokenAddress/launches/new',
     async ({ params }) => {
       let response: Cast[]
-      const cached = null
+      const cached = await redis.get(`launches:new:${params.tokenAddress}`)
       if (cached) {
         response = JSON.parse(cached)
       } else {
