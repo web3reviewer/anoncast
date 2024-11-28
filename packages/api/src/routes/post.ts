@@ -133,6 +133,23 @@ export function getPostRoutes(createPostBackend: Noir, submitHashBackend: Noir) 
           }
         }
 
+        const unableToPromoteRegex = [
+          /.*clanker.*launch.*/i,
+          /.*dexscreener.com.*/i,
+          /.*dextools.io.*/i,
+          /.*0x[a-fA-F0-9]{40}.*/i,
+        ]
+        if (
+          unableToPromoteRegex.some((regex) => cast.cast.text.match(regex)) ||
+          cast.cast.embeds?.some((embed) =>
+            unableToPromoteRegex.some((regex) => embed.url?.match(regex))
+          )
+        ) {
+          return {
+            success: false,
+          }
+        }
+
         const mapping = await getPostMapping(params.hash)
         if (mapping?.tweetId) {
           return {

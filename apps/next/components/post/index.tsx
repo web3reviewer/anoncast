@@ -56,13 +56,20 @@ export function Post({
     balance >= BigInt(TOKEN_CONFIG[tokenAddress].deleteAmount) &&
     cast.tweetId
 
+  const unableToPromoteRegex = [
+    /.*clanker.*launch.*/i,
+    /.*dexscreener.com.*/i,
+    /.*dextools.io.*/i,
+    /.*0x[a-fA-F0-9]{40}.*/i,
+  ]
+
   const canPromote =
     address &&
     !!balance &&
     balance >= BigInt(TOKEN_CONFIG[tokenAddress].promoteAmount) &&
     !cast.tweetId &&
     variant === 'anoncast' &&
-    !cast.text.match(/.*clanker.*launch.*/)
+    !unableToPromoteRegex.some((regex) => cast.text.match(regex))
 
   const canLaunch =
     cast.author.fid !== TOKEN_CONFIG[tokenAddress].launchFid &&
@@ -320,7 +327,7 @@ function DeleteButton({ cast, tokenAddress }: { cast: Cast; tokenAddress: string
     <AlertDialog open={open} onOpenChange={setOpen}>
       <AlertDialogTrigger asChild>
         <p className="text-sm text-red-500 underline decoration-dotted font-semibold cursor-pointer hover:text-red-400">
-          Delete on X
+          Delete
         </p>
       </AlertDialogTrigger>
       <AlertDialogContent>
