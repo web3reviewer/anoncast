@@ -65,7 +65,9 @@ export const feedRoutes = createElysia({ prefix: '/feed' })
       }
 
       return {
-        casts: await augmentCasts(response.casts),
+        casts: await augmentCasts(
+          response.casts.filter(({ text }) => !text.toLowerCase().includes('@clanker'))
+        ),
       }
     },
     {
