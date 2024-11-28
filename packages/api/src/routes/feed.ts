@@ -107,18 +107,22 @@ export const feedRoutes = createElysia({ prefix: '/feed' })
       if (cached) {
         response = JSON.parse(cached)
       } else {
-        const searchResponse = await neynar.getUserCasts(
-          TOKEN_CONFIG[params.tokenAddress].fid
-        )
-        if (searchResponse.casts.length === 0) {
+        const [searchResponse1, searchResponse2] = await Promise.all([
+          neynar.getUserCasts(TOKEN_CONFIG[params.tokenAddress].fid),
+          neynar.getUserCasts(TOKEN_CONFIG[params.tokenAddress].launchFid),
+        ])
+        response = searchResponse1.casts
+          .concat(searchResponse2.casts)
+          .sort(
+            (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+          )
+          .filter(({ text }) => text.toLowerCase().includes('@clanker'))
+        if (response.length === 0) {
           return {
             casts: [],
           }
         }
 
-        response = searchResponse.casts.filter(({ text }) =>
-          text.toLowerCase().includes('@clanker')
-        )
         await redis.set(
           `launches:new:${params.tokenAddress}`,
           JSON.stringify(response),
