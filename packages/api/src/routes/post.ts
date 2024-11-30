@@ -148,6 +148,7 @@ export function getPostRoutes(createPostBackend: Noir, submitHashBackend: Noir) 
           /.*dexscreener.com.*/i,
           /.*dextools.io.*/i,
           /.*0x[a-fA-F0-9]{40}.*/i,
+          /\$(?!ANON\b|\d+(\.\d+)?\b)\w+\b/i,
         ]
         if (
           unableToPromoteRegex.some((regex) => cast.cast.text.match(regex)) ||
