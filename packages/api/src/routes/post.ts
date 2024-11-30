@@ -16,6 +16,9 @@ import { getQueue, QueueName } from '@anon/queue/src/utils'
 import { Noir } from '@noir-lang/noir_js'
 import { getValidRoots } from '@anon/utils/src/merkle-tree'
 import { augmentCasts } from './feed'
+import { Redis } from 'ioredis'
+
+const redis = new Redis(process.env.REDIS_URL as string)
 
 export function getPostRoutes(createPostBackend: Noir, submitHashBackend: Noir) {
   return createElysia({ prefix: '/posts' })
@@ -82,6 +85,13 @@ export function getPostRoutes(createPostBackend: Noir, submitHashBackend: Noir) 
         }
 
         const params = extractSubmitHashData(body.publicInputs)
+        const threeHoursInMilliseconds = 3 * 60 * 60 * 1000
+        const currentTime = Date.now()
+        if (currentTime - params.timestamp > threeHoursInMilliseconds) {
+          return {
+            success: false,
+          }
+        }
 
         await validateRoot(ProofType.DELETE_POST, params.tokenAddress, params.root)
 
@@ -150,6 +160,13 @@ export function getPostRoutes(createPostBackend: Noir, submitHashBackend: Noir) 
           }
         }
 
+        const exists = await redis.get(`promote:hash:${params.hash}`)
+        if (exists) {
+          return {
+            success: false,
+          }
+        }
+
         const mapping = await getPostMapping(params.hash)
         if (mapping?.tweetId) {
           return {
@@ -166,6 +183,8 @@ export function getPostRoutes(createPostBackend: Noir, submitHashBackend: Noir) 
           parentMapping?.tweetId || undefined,
           body.args?.asReply
         )
+
+        await redis.set(`promote:hash:${params.hash}`, 'true', 'EX', 60 * 60)
 
         const parentHash = cast.cast.parent_hash
         const channelId = cast.cast.channel?.id
