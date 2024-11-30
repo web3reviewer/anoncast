@@ -85,8 +85,8 @@ export function getPostRoutes(createPostBackend: Noir, submitHashBackend: Noir) 
         }
 
         const params = extractSubmitHashData(body.publicInputs)
-        const threeHoursInMilliseconds = 3 * 60 * 60 * 1000
-        const currentTime = Date.now()
+        const threeHoursInMilliseconds = 3 * 60 * 60
+        const currentTime = Math.floor(Date.now() / 1000)
         if (currentTime - params.timestamp > threeHoursInMilliseconds) {
           return {
             success: false,
@@ -465,7 +465,6 @@ async function validateRoot(type: ProofType, tokenAddress: string, root: string)
   if (!validRoots.length) {
     throw new Error('No valid roots found')
   }
-
   if (!validRoots.includes(root)) {
     throw new Error('Invalid root')
   }
