@@ -148,7 +148,7 @@ export function getPostRoutes(createPostBackend: Noir, submitHashBackend: Noir) 
           /.*dexscreener.com.*/i,
           /.*dextools.io.*/i,
           /.*0x[a-fA-F0-9]{40}.*/i,
-          /(^|\s)\$(?!ANON\b|\d+(\.\d+)?\b)\w+\b/i,
+          /(^|\s)\$(?!ANON\b)[a-zA-Z]+\b/i,
         ]
         if (
           unableToPromoteRegex.some((regex) => cast.cast.text.match(regex)) ||
@@ -157,6 +157,9 @@ export function getPostRoutes(createPostBackend: Noir, submitHashBackend: Noir) 
           )
         ) {
           return {
+            error: `Invalid text: ${cast.cast.text} ${cast.cast.embeds
+              ?.map((e) => e.url)
+              .join(', ')}`,
             success: false,
           }
         }
@@ -164,66 +167,70 @@ export function getPostRoutes(createPostBackend: Noir, submitHashBackend: Noir) 
         const exists = await redis.get(`promote:hash:${params.hash}`)
         if (exists) {
           return {
+            error: 'Already promoted',
             success: false,
           }
         }
 
         const mapping = await getPostMapping(params.hash)
-        if (mapping?.tweetId) {
-          return {
-            success: true,
+
+        let bestOfTweetId = mapping?.tweetId || undefined
+        let bestOfHash = mapping?.bestOfHash || undefined
+
+        if (!mapping?.tweetId) {
+          const parentMapping = cast.cast.parent_hash
+            ? await getPostMapping(cast.cast.parent_hash)
+            : undefined
+
+          bestOfTweetId = await promoteToTwitter(
+            cast.cast,
+            parentMapping?.tweetId || undefined,
+            body.args?.asReply
+          )
+        }
+
+        if (!mapping?.bestOfHash) {
+          const parentHash = cast.cast.parent_hash
+          const channelId = cast.cast.channel?.id
+          const embeds: string[] = []
+          let quoteHash: string | undefined
+          for (const embed of cast.cast.embeds || []) {
+            if (embed.url) {
+              embeds.push(embed.url)
+            } else if (embed.cast) {
+              quoteHash = embed.cast.hash
+            }
+          }
+
+          const bestOfResponse = await neynar.post({
+            tokenAddress: params.tokenAddress,
+            text: cast.cast.text,
+            embeds,
+            quote: quoteHash,
+            parent: parentHash,
+            channel: channelId,
+            bestOfSigner: true,
+          })
+
+          if ('cast' in bestOfResponse) {
+            bestOfHash = bestOfResponse?.cast?.hash
           }
         }
 
-        const parentMapping = cast.cast.parent_hash
-          ? await getPostMapping(cast.cast.parent_hash)
-          : undefined
-
-        const bestOfTweetId = await promoteToTwitter(
-          cast.cast,
-          parentMapping?.tweetId || undefined,
-          body.args?.asReply
-        )
-
-        await redis.set(`promote:hash:${params.hash}`, 'true', 'EX', 60 * 60)
-
-        const parentHash = cast.cast.parent_hash
-        const channelId = cast.cast.channel?.id
-        const embeds: string[] = []
-        let quoteHash: string | undefined
-        for (const embed of cast.cast.embeds || []) {
-          if (embed.url) {
-            embeds.push(embed.url)
-          } else if (embed.cast) {
-            quoteHash = embed.cast.hash
-          }
+        if (bestOfTweetId && bestOfHash) {
+          await redis.set(`promote:hash:${params.hash}`, 'true', 'EX', 60 * 60)
         }
 
-        const bestOfResponse = await neynar.post({
-          tokenAddress: params.tokenAddress,
-          text: cast.cast.text,
-          embeds,
-          quote: quoteHash,
-          parent: parentHash,
-          channel: channelId,
-          bestOfSigner: true,
+        await createPostMapping({
+          castHash: params.hash,
+          tweetId: bestOfTweetId,
+          bestOfHash,
         })
 
-        if ('cast' in bestOfResponse) {
-          await createPostMapping({
-            castHash: params.hash,
-            tweetId: bestOfTweetId,
-            bestOfHash: bestOfResponse.cast.hash,
-          })
-          return {
-            success: true,
-            tweetId: bestOfTweetId,
-            bestOfHash: bestOfResponse.cast.hash,
-          }
-        }
-
         return {
-          success: false,
+          success: true,
+          tweetId: bestOfTweetId,
+          bestOfHash,
         }
       },
       {

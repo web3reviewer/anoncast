@@ -17,7 +17,13 @@ export async function handler(data: QueueArgs) {
 
       const result = await response.json()
       if (!result?.success) {
-        throw new Error('Failed to create post')
+        if (result?.error) {
+          if (!result.error.includes('Invalid text')) {
+            throw new Error('Failed to create post', result?.error)
+          }
+        } else {
+          throw new Error('Failed to create post')
+        }
       }
       return result
     }
@@ -35,7 +41,13 @@ export async function handler(data: QueueArgs) {
 
       const result = await response.json()
       if (!result?.success) {
-        throw new Error('Failed to delete post')
+        if (result?.error) {
+          if (!result.error.includes('Invalid text')) {
+            throw new Error('Failed to delete post', result?.error)
+          }
+        } else {
+          throw new Error('Failed to delete post')
+        }
       }
       return result
     }
@@ -53,7 +65,13 @@ export async function handler(data: QueueArgs) {
 
       const result = await response.json()
       if (!result?.success) {
-        throw new Error('Failed to launch post')
+        if (result?.error) {
+          if (!result.error.includes('Invalid text')) {
+            throw new Error('Failed to launch post', result?.error)
+          }
+        } else {
+          throw new Error('Failed to launch post')
+        }
       }
       return result
     }
@@ -71,7 +89,17 @@ export async function handler(data: QueueArgs) {
 
       const result = await response.json()
       if (!result?.success) {
-        throw new Error('Failed to promote post')
+        if (result?.error) {
+          console.log('promote error', result.error)
+          if (
+            !result.error.includes('Invalid text') &&
+            !result.error.includes('Already promoted')
+          ) {
+            throw new Error('Failed to promote post', result?.error)
+          }
+        } else {
+          throw new Error('Failed to promote post')
+        }
       }
       return result
     }

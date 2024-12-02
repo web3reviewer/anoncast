@@ -39,7 +39,10 @@ export async function createPostMapping({
   await db
     .insert(postMappingTable)
     .values({ castHash, tweetId, bestOfHash, launchTweetId, launchHash })
-    .onConflictDoNothing()
+    .onConflictDoUpdate({
+      target: postMappingTable.castHash,
+      set: { tweetId, bestOfHash, launchTweetId, launchHash },
+    })
 }
 
 export async function getPostMapping(castHash: string) {
