@@ -19,7 +19,7 @@ import { useCreatePost } from '../create-post/context'
 import { useAccount, useSignMessage } from 'wagmi'
 import { Checkbox } from '../ui/checkbox'
 import { useBalance } from '@/hooks/use-balance'
-import { TOKEN_CONFIG } from '@anon/utils/src/config'
+import { DELETE_AMOUNT, PROMOTE_AMOUNT, LAUNCH_AMOUNT, LAUNCH_FID } from '@/lib/utils'
 import { usePromotePost } from '@/hooks/use-promote-post'
 import { useDeletePost } from '@/hooks/use-delete-post'
 import { api } from '@/lib/api'
@@ -28,6 +28,7 @@ import { hashMessage } from 'viem'
 import { Input } from '../ui/input'
 import { useQuery } from '@tanstack/react-query'
 import { useLaunchPost } from '@/hooks/use-launch-post'
+import { sdk } from '@/lib/utils'
 
 function formatNumber(num: number): string {
   if (num < 1000) return num.toString()
@@ -40,21 +41,19 @@ function formatNumber(num: number): string {
 
 export function Post({
   cast,
-  tokenAddress,
 }: {
   cast: Cast
-  tokenAddress: string
 }) {
   const { variant } = useCreatePost()
   const { address } = useAccount()
-  const { data: balance } = useBalance(tokenAddress)
+  const { data: balance } = useBalance()
   const [reveal, setReveal] = useState(cast.reveal)
 
   const canDelete =
     address &&
     !!balance &&
-    balance >= BigInt(TOKEN_CONFIG[tokenAddress].deleteAmount) &&
-    cast.tweetId
+    balance >= BigInt(DELETE_AMOUNT) &&
+    (cast.tweetId || cast.promotedHash)
 
   const unableToPromoteRegex = [
     /.*clanker.*launch.*/i,
@@ -66,22 +65,22 @@ export function Post({
   const canPromote =
     address &&
     !!balance &&
-    balance >= BigInt(TOKEN_CONFIG[tokenAddress].promoteAmount) &&
+    balance >= BigInt(PROMOTE_AMOUNT) &&
     !cast.tweetId &&
     variant === 'anoncast' &&
     !unableToPromoteRegex.some((regex) => cast.text.match(regex))
 
   const canLaunch =
-    cast.author.fid !== TOKEN_CONFIG[tokenAddress].launchFid &&
+    cast.author.fid !== LAUNCH_FID &&
     address &&
     !!balance &&
-    balance >= BigInt(TOKEN_CONFIG[tokenAddress].launchAmount) &&
+    balance >= BigInt(LAUNCH_AMOUNT) &&
     !cast.launchHash &&
     ((variant === 'anonfun' &&
       cast.hash !== '0x5c790f70ffe770c68248775af6f2c1fcfb29de58') ||
       cast.text.match(/.*clanker.*launch.*/))
 
-  const canReveal = address && !!cast.reveal && !cast.reveal.revealedAt
+  const canReveal = address && !!cast.reveal?.revealHash && !cast.reveal?.phrase
 
   const { setParent, setQuote } = useCreatePost()
   const cleanText = (text: string) => {
@@ -118,7 +117,7 @@ export function Post({
     <div className="relative [overflow-wrap:anywhere] bg-zinc-900 border border-zinc-700 rounded-lg overflow-hidden">
       <div className="flex flex-row gap-4  p-4 sm:p-6  ">
         <div className="flex flex-col gap-2 w-full">
-          <div className="flex flex-col gap-4 sm:flex-row justify-between">
+          <div className="flex flex-row gap-4 justify-between">
             <div className="flex flex-row items-center">
               <div className="flex flex-row items-center gap-2 ">
                 <div className="text-sm font-medium text-zinc-400">
@@ -161,7 +160,7 @@ export function Post({
               )}
             </div>
           </div>
-          {reveal?.revealedAt && <RevealBadge reveal={reveal} />}
+          {reveal?.phrase && <RevealBadge reveal={reveal} />}
           <div className="font-medium whitespace-pre-wrap">{sanitizedText}</div>
           {cast.embeds.map((embed) => {
             if (embed.metadata?.image) {
@@ -258,15 +257,9 @@ export function Post({
                   Reply
                 </p>
               )}
-              {canReveal && (
-                <RevealButton
-                  cast={cast}
-                  onReveal={setReveal}
-                  tokenAddress={tokenAddress}
-                />
-              )}
-              {canPromote && <PromoteButton cast={cast} tokenAddress={tokenAddress} />}
-              {canLaunch && <LaunchButton cast={cast} tokenAddress={tokenAddress} />}
+              {canReveal && <RevealButton cast={cast} onReveal={setReveal} />}
+              {canPromote && <PromoteButton cast={cast} />}
+              {canLaunch && <LaunchButton cast={cast} />}
               {cast.launchHash && (
                 <a
                   href={`https://warpcast.com/~/conversations/${cast.launchHash}`}
@@ -277,7 +270,7 @@ export function Post({
                   Launched
                 </a>
               )}
-              {canDelete && <DeleteButton cast={cast} tokenAddress={tokenAddress} />}
+              {canDelete && <DeleteButton cast={cast} />}
             </div>
           </div>
         </div>
@@ -310,21 +303,24 @@ function timeAgo(timestamp: string): string {
   return 'just now'
 }
 
-function DeleteButton({ cast, tokenAddress }: { cast: Cast; tokenAddress: string }) {
-  const { toast } = useToast()
-  const { deletePost, deleteState } = useDeletePost(tokenAddress)
+function DeleteButton({ cast }: { cast: Cast }) {
+  const { deletePost, deleteState, setDeleteState } = useDeletePost()
   const [open, setOpen] = useState(false)
 
   const handleDelete = async () => {
     await deletePost(cast.hash)
-    toast({
-      title: 'Post will be deleted in 1-2 minutes',
-    })
     setOpen(false)
   }
 
+  const handleOpenChange = (open: boolean) => {
+    setOpen(open)
+    if (!open) {
+      setDeleteState({ status: 'idle' })
+    }
+  }
+
   return (
-    <AlertDialog open={open} onOpenChange={setOpen}>
+    <AlertDialog open={open} onOpenChange={handleOpenChange}>
       <AlertDialogTrigger asChild>
         <p className="text-sm text-red-500 underline decoration-dotted font-semibold cursor-pointer hover:text-red-400">
           Delete
@@ -364,18 +360,21 @@ function DeleteButton({ cast, tokenAddress }: { cast: Cast; tokenAddress: string
   )
 }
 
-function PromoteButton({ cast, tokenAddress }: { cast: Cast; tokenAddress: string }) {
-  const { toast } = useToast()
-  const { promotePost, promoteState } = usePromotePost(tokenAddress)
+function PromoteButton({ cast }: { cast: Cast }) {
+  const { promotePost, promoteState, setPromoteState } = usePromotePost()
   const [open, setOpen] = useState(false)
   const [asReply, setAsReply] = useState(false)
 
   const handlePromote = async () => {
     await promotePost(cast.hash, asReply)
-    toast({
-      title: 'Post will be promoted in 1-2 minutes',
-    })
     setOpen(false)
+  }
+
+  const handleOpenChange = (open: boolean) => {
+    setOpen(open)
+    if (!open) {
+      setPromoteState({ status: 'idle' })
+    }
   }
 
   const twitterEmbed = cast.embeds?.find(
@@ -383,7 +382,7 @@ function PromoteButton({ cast, tokenAddress }: { cast: Cast; tokenAddress: strin
   )
 
   return (
-    <AlertDialog open={open} onOpenChange={setOpen}>
+    <AlertDialog open={open} onOpenChange={handleOpenChange}>
       <AlertDialogTrigger asChild>
         <p className="text-sm underline decoration-dotted font-semibold cursor-pointer hover:text-zinc-400">
           Promote
@@ -434,21 +433,24 @@ function PromoteButton({ cast, tokenAddress }: { cast: Cast; tokenAddress: strin
   )
 }
 
-function LaunchButton({ cast, tokenAddress }: { cast: Cast; tokenAddress: string }) {
-  const { toast } = useToast()
-  const { launchPost, launchState } = useLaunchPost(tokenAddress)
+function LaunchButton({ cast }: { cast: Cast }) {
+  const { launchPost, launchState, setLaunchState } = useLaunchPost()
   const [open, setOpen] = useState(false)
 
   const handleLaunch = async () => {
     await launchPost(cast.hash)
-    toast({
-      title: 'Post will be launched in 1-2 minutes',
-    })
     setOpen(false)
   }
 
+  const handleOpenChange = (open: boolean) => {
+    setOpen(open)
+    if (!open) {
+      setLaunchState({ status: 'idle' })
+    }
+  }
+
   return (
-    <AlertDialog open={open} onOpenChange={setOpen}>
+    <AlertDialog open={open} onOpenChange={handleOpenChange}>
       <AlertDialogTrigger asChild>
         <p className="text-sm text-green-500 underline decoration-dotted font-semibold cursor-pointer hover:text-green-400">
           Launch
@@ -487,8 +489,7 @@ function LaunchButton({ cast, tokenAddress }: { cast: Cast; tokenAddress: string
 function RevealButton({
   cast,
   onReveal,
-  tokenAddress,
-}: { cast: Cast; onReveal: (reveal: Reveal) => void; tokenAddress: string }) {
+}: { cast: Cast; onReveal: (reveal: Reveal) => void }) {
   const [open, setOpen] = useState(false)
   const { toast } = useToast()
   const [value, setValue] = useState('')
@@ -501,7 +502,7 @@ function RevealButton({
     if (!cast.reveal || !address) return
     setIsRevealing(true)
     try {
-      const inputHash = hashMessage(JSON.stringify(cast.reveal.input) + value)
+      const inputHash = hashMessage(cast.reveal.input + value)
       if (inputHash !== cast.reveal.revealHash) {
         toast({
           title: 'Incorrect phrase',
@@ -514,10 +515,16 @@ function RevealButton({
         const signature = await signMessageAsync({
           message,
         })
-        await api.revealPost(cast.hash, message, value, signature, address, tokenAddress)
+        await sdk.revealPost({
+          hash: cast.hash,
+          message,
+          phrase: value,
+          signature,
+          address,
+        })
         onReveal({
           ...cast.reveal,
-          revealPhrase: value,
+          phrase: value,
           signature,
           address,
           revealedAt: new Date().toISOString(),
@@ -572,7 +579,7 @@ function RevealButton({
 function RevealBadge({ reveal }: { reveal: Reveal }) {
   const { data } = useQuery({
     queryKey: ['identity', reveal.address],
-    queryFn: () => api.getIdentity(reveal.address),
+    queryFn: () => api.getIdentity(reveal.address!),
   })
 
   const formatAddress = (address: string) => {
@@ -591,7 +598,7 @@ function RevealBadge({ reveal }: { reveal: Reveal }) {
           <span>{`revealed as `}</span>
           <img src={data.pfp_url} className="w-4 h-4 rounded-full" alt="pfp" />
           <span>{data.username}</span>
-          <span>{` ${timeAgo(reveal.revealedAt)}`}</span>
+          <span>{` ${timeAgo(reveal.revealedAt!)}`}</span>
         </a>
       )}
       {!data?.username && (
@@ -601,7 +608,9 @@ function RevealBadge({ reveal }: { reveal: Reveal }) {
           rel="noreferrer"
         >
           <span className="text-sm font-semibold cursor-pointer hover:text-zinc-400 text-green-400 hover:text-green-200">
-            {`revealed as ${formatAddress(reveal.address)} ${timeAgo(reveal.revealedAt)}`}
+            {`revealed as ${formatAddress(reveal.address!)} ${timeAgo(
+              reveal.revealedAt!
+            )}`}
           </span>
         </a>
       )}

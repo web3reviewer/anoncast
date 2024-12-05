@@ -1,8 +1,8 @@
-import { api } from '@/lib/api'
-import { generateProof, ProofType } from '@anon/utils/src/proofs/generate'
 import { useState } from 'react'
 import { hashMessage } from 'viem'
 import { useAccount, useSignMessage } from 'wagmi'
+import { useToast } from './use-toast'
+import { sdk } from '@/lib/utils'
 
 type DeleteState =
   | {
@@ -13,92 +13,61 @@ type DeleteState =
       error: string
     }
 
-interface PostContextProps {
-  deletePost: (hash: string) => Promise<void>
-  deleteState: DeleteState
-}
-
-export const useDeletePost = (tokenAddress: string) => {
+export const useDeletePost = () => {
+  const { toast } = useToast()
   const [deleteState, setDeleteState] = useState<DeleteState>({ status: 'idle' })
   const { address } = useAccount()
   const { signMessageAsync } = useSignMessage()
-
-  const getSignature = async ({
-    address,
-    timestamp,
-  }: {
-    address: string
-    timestamp: number
-  }) => {
-    try {
-      const message = `${address}:${timestamp}`
-      const signature = await signMessageAsync({
-        message,
-      })
-      return { signature, message }
-    } catch {
-      return
-    }
-  }
 
   const deletePost = async (hash: string) => {
     if (!address) return
 
     setDeleteState({ status: 'signature' })
     try {
-      const timestamp = Math.floor(Date.now() / 1000)
-      const signatureData = await getSignature({
-        address,
-        timestamp,
+      const data = {
+        hash,
+      }
+      const message = JSON.stringify(data)
+      const signature = await signMessageAsync({
+        message,
       })
-      if (!signatureData) {
+      if (!signature) {
         setDeleteState({ status: 'error', error: 'Failed to get signature' })
         return
       }
 
       setDeleteState({ status: 'generating' })
 
-      const proof = await generateProof({
-        tokenAddress,
-        userAddress: address,
-        proofType: ProofType.DELETE_POST,
-        signature: {
-          timestamp,
-          signature: signatureData.signature,
-          messageHash: hashMessage(signatureData.message),
-        },
-        input: {
-          hash,
-        },
+      const response = await sdk.performAction({
+        address,
+        signature,
+        messageHash: hashMessage(message),
+        data,
+        actionId: 'd4890070-d70f-4bfe-9c37-863ab9608205',
       })
-      if (!proof) {
-        setDeleteState({ status: 'error', error: 'Not allowed to delete' })
-        return
-      }
 
-      if (process.env.NEXT_PUBLIC_DISABLE_QUEUE) {
-        await api.deletePost(
-          Array.from(proof.proof),
-          proof.publicInputs.map((input) => Array.from(input))
-        )
-      } else {
-        await api.submitAction(
-          ProofType.DELETE_POST,
-          Array.from(proof.proof),
-          proof.publicInputs.map((input) => Array.from(input)),
-          {}
-        )
+      if (!response.data?.success) {
+        throw new Error('Failed to delete')
       }
 
       setDeleteState({ status: 'idle' })
+      toast({
+        title: 'Post deleted',
+      })
     } catch (e) {
       setDeleteState({ status: 'error', error: 'Failed to delete' })
       console.error(e)
+      toast({
+        variant: 'destructive',
+        title: 'Failed to delete',
+        description: 'Please try again.',
+      })
     }
   }
 
   return {
     deletePost,
     deleteState,
+    setDeleteState,
   }
 }

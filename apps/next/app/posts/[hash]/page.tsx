@@ -1,19 +1,21 @@
 'use client'
-
 import { CreatePostProvider } from '@/components/create-post/context'
 import { Post } from '@/components/post'
 import { api } from '@/lib/api'
-import { ANON_ADDRESS } from '@anon/utils/src/config'
+import { useQuery } from '@tanstack/react-query'
 
-export default async function Page({ params }: { params: { hash: string } }) {
-  const data = await api.getPost(params.hash)
+export default function Page({ params }: { params: { hash: string } }) {
+  const { data } = useQuery({
+    queryKey: ['post', params.hash],
+    queryFn: () => api.getPost(params.hash),
+  })
 
   if (!data) return <div>Cast not found</div>
 
   return (
-    <CreatePostProvider tokenAddress={ANON_ADDRESS}>
+    <CreatePostProvider>
       <div className="flex flex-col gap-4">
-        <Post cast={data} tokenAddress={ANON_ADDRESS} />
+        <Post cast={data} />
       </div>
     </CreatePostProvider>
   )
