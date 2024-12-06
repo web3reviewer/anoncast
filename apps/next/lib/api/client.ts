@@ -1,4 +1,4 @@
-import { ApiResponse, RequestConfig } from './types'
+import { ApiResponse, RequestConfig } from '@anonworld/sdk/types'
 
 export class ApiClient {
   private baseUrl: string

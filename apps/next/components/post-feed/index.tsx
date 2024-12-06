@@ -1,14 +1,14 @@
 'use client'
 
-import { Cast } from '@/lib/types'
+import { Cast } from '@anonworld/sdk/types'
 import { useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
-import { api } from '@/lib/api'
 import AnimatedTabs from './animated-tabs'
 import { Skeleton } from '../ui/skeleton'
 import { Post } from '../post'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { BEST_OF_FID, FID, LAUNCH_FID, sdk } from '@/lib/utils'
 
 export function PostFeed({
   defaultTab = 'trending',
@@ -21,16 +21,18 @@ export function PostFeed({
   const { data: trendingPosts, isLoading: isTrendingLoading } = useQuery({
     queryKey: ['trending'],
     queryFn: async (): Promise<Cast[]> => {
-      const response = await api.getTrendingPosts()
-      return response?.casts || []
+      const response = await sdk.getTrendingFeed(BEST_OF_FID)
+      return response?.data?.data || []
     },
   })
 
   const { data: newPosts, isLoading: isNewLoading } = useQuery({
     queryKey: ['posts'],
     queryFn: async (): Promise<Cast[]> => {
-      const response = await api.getNewPosts()
-      return response?.casts || []
+      const response = await sdk.getNewFeed(FID)
+      return (response?.data?.data || [])?.filter(
+        ({ text }) => !text.toLowerCase().match(/.*@clanker.*launch.*/)
+      )
     },
   })
 
@@ -76,16 +78,18 @@ export function PromotedFeed({
   const { data: promotedLaunches, isLoading: isPromotedLoading } = useQuery({
     queryKey: ['launches', 'promoted'],
     queryFn: async (): Promise<Cast[]> => {
-      const response = await api.getPromotedLaunches()
-      return response?.casts || []
+      const response = await sdk.getNewFeed(LAUNCH_FID)
+      return response?.data?.data || []
     },
   })
 
   const { data: newLaunches, isLoading: isNewLoading } = useQuery({
     queryKey: ['launches', 'new'],
     queryFn: async (): Promise<Cast[]> => {
-      const response = await api.getNewLaunches()
-      return response?.casts || []
+      const response = await sdk.getNewFeed(FID)
+      return (response?.data?.data || [])?.filter(({ text }) =>
+        text.toLowerCase().match(/.*@clanker.*launch.*/)
+      )
     },
   })
 

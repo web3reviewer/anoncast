@@ -1,5 +1,5 @@
 import { ProofData } from '@anonworld/zk'
-import { ApiResponse, RequestConfig } from './types'
+import { ApiResponse, Cast, RequestConfig } from './types'
 
 export class Api {
   private baseUrl: string
@@ -121,5 +121,17 @@ export class Api {
       method: 'POST',
       body: JSON.stringify({ hashes }),
     })
+  }
+
+  async getTrendingFeed(fid: number) {
+    return await this.request<{ data: Array<Cast> }>(`/feeds/${fid}/trending`)
+  }
+
+  async getNewFeed(fid: number) {
+    return await this.request<{ data: Array<Cast> }>(`/feeds/${fid}/new`)
+  }
+
+  async getPost(hash: string) {
+    return await this.request<Cast>(`/posts/${hash}`)
   }
 }

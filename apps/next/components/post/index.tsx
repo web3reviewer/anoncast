@@ -1,6 +1,6 @@
 'use client'
 
-import { Cast, Reveal } from '@/lib/types'
+import { Cast, Reveal } from '@anonworld/sdk/types'
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -49,38 +49,49 @@ export function Post({
   const { data: balance } = useBalance()
   const [reveal, setReveal] = useState(cast.reveal)
 
+  const twitterSibling = cast.siblings.find((sibling) => sibling.target === 'twitter')
+  const twitterChild = cast.children.find((child) => child.target === 'twitter')
+  const tweetId = twitterSibling?.targetId || twitterChild?.targetId
+
+  const launchChild = cast.children.find(
+    (child) => child.target === 'farcaster' && Number(child.targetAccount) === LAUNCH_FID
+  )
+  const unableToPromoteRegex = [
+    /.*@clanker.*launch.*/i,
+    /.*dexscreener.com.*/i,
+    /.*dextools.io.*/i,
+    /.*0x[a-fA-F0-9]{40}.*/i,
+    /(^|\s)\$(?!ANON\b)[a-zA-Z]+\b/i,
+  ]
+
   const canDelete =
     address &&
     !!balance &&
     balance >= BigInt(DELETE_AMOUNT) &&
-    (cast.tweetId || cast.promotedHash)
-
-  const unableToPromoteRegex = [
-    /.*clanker.*launch.*/i,
-    /.*dexscreener.com.*/i,
-    /.*dextools.io.*/i,
-    /.*0x[a-fA-F0-9]{40}.*/i,
-  ]
+    (cast.parent || tweetId) &&
+    cast.author.fid !== LAUNCH_FID
 
   const canPromote =
     address &&
     !!balance &&
     balance >= BigInt(PROMOTE_AMOUNT) &&
-    !cast.tweetId &&
+    !tweetId &&
     variant === 'anoncast' &&
-    !unableToPromoteRegex.some((regex) => cast.text.match(regex))
+    !unableToPromoteRegex.some((regex) => cast.text.match(regex)) &&
+    !cast.embeds?.some((embed) =>
+      unableToPromoteRegex.some((regex) => embed.url?.match(regex))
+    )
 
   const canLaunch =
     cast.author.fid !== LAUNCH_FID &&
     address &&
     !!balance &&
     balance >= BigInt(LAUNCH_AMOUNT) &&
-    !cast.launchHash &&
-    ((variant === 'anonfun' &&
-      cast.hash !== '0x5c790f70ffe770c68248775af6f2c1fcfb29de58') ||
-      cast.text.match(/.*clanker.*launch.*/))
+    !launchChild &&
+    variant === 'anonfun' &&
+    cast.text.match(/.*clanker.*launch.*/)
 
-  const canReveal = address && !!cast.reveal?.revealHash && !cast.reveal?.phrase
+  const canReveal = address && !!cast.reveal && !cast.reveal?.phrase
 
   const { setParent, setQuote } = useCreatePost()
   const cleanText = (text: string) => {
@@ -149,9 +160,9 @@ export function Post({
               >
                 <img src="/farcaster.svg" alt="Warpcast" className="w-4 h-4 invert" />
               </a>
-              {cast.tweetId && (
+              {tweetId && (
                 <a
-                  href={`https://x.com/i/status/${cast.tweetId}`}
+                  href={`https://x.com/i/status/${tweetId}`}
                   target="_blank"
                   rel="noreferrer"
                 >
@@ -260,9 +271,9 @@ export function Post({
               {canReveal && <RevealButton cast={cast} onReveal={setReveal} />}
               {canPromote && <PromoteButton cast={cast} />}
               {canLaunch && <LaunchButton cast={cast} />}
-              {cast.launchHash && (
+              {(launchChild || cast.author.fid === LAUNCH_FID) && (
                 <a
-                  href={`https://warpcast.com/~/conversations/${cast.launchHash}`}
+                  href={`https://warpcast.com/~/conversations/${cast.hash}`}
                   target="_blank"
                   rel="noreferrer"
                   className="text-sm underline decoration-dotted font-semibold cursor-pointer hover:text-zinc-400"

@@ -1,13 +1,9 @@
 import { t } from 'elysia'
 import { createElysia } from './utils'
-import { feedRoutes } from './routes/feed'
-import { postRoutes } from './routes/post'
 import { uploadRoutes } from './routes/upload'
 import { neynar } from './services/neynar'
 
 const app = createElysia()
-  .use(feedRoutes)
-  .use(postRoutes)
   .use(uploadRoutes)
   .get(
     '/get-cast',

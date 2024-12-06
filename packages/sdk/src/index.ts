@@ -1,4 +1,4 @@
-import type { buildHashFunction, ProofManager } from '@anonworld/zk'
+import type { ProofManager } from '@anonworld/zk'
 import { toArray } from './utils'
 import { Api } from './api'
 import { getPublicKey } from './utils'
@@ -94,5 +94,17 @@ export class AnonWorldSDK {
 
   async getBulkPostMetadata(hashes: string[]) {
     return await this.api.getBulkPostMetadata(hashes)
+  }
+
+  async getTrendingFeed(fid: number) {
+    return await this.api.getTrendingFeed(fid)
+  }
+
+  async getNewFeed(fid: number) {
+    return await this.api.getNewFeed(fid)
+  }
+
+  async getPost(hash: string) {
+    return await this.api.getPost(hash)
   }
 }
