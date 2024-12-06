@@ -19,9 +19,9 @@ import {
 
 import { Input } from '../ui/input'
 import { useQuery } from '@tanstack/react-query'
-import { api } from '@/lib/api'
 import Confetti from 'confetti-react'
 import { Checkbox } from '../ui/checkbox'
+import { sdk } from '@/lib/utils'
 
 const MAX_EMBEDS = 2
 
@@ -64,9 +64,9 @@ export function CreatePost({ variant }: { variant: 'post' | 'launch' }) {
 
       if (!quote || currentHash !== urlHash) {
         // If no quote exists or URL hash changed, try to set a new one
-        api.getCast(warpcastMatches[0]).then((cast) => {
-          if (cast) {
-            setQuote(cast)
+        sdk.getFarcasterCast(warpcastMatches[0]).then((data) => {
+          if (data.data) {
+            setQuote(data.data)
           }
         })
       }
@@ -226,7 +226,7 @@ function UploadImage() {
     setError(null)
 
     try {
-      const response = await api.uploadImage(file)
+      const response = await sdk.uploadImage(file)
 
       if (response.error) {
         throw new Error(response.error.message)
@@ -404,8 +404,8 @@ function ParentCast() {
   const handleSetParent = async () => {
     setLoading(true)
     if (value) {
-      const data = await api.getCast(value)
-      setParent(data ?? null)
+      const data = await sdk.getFarcasterCast(value)
+      setParent(data.data ?? null)
     }
     setOpen(false)
     setLoading(false)
@@ -505,11 +505,11 @@ function Channel() {
     setLoading(true)
     setError(null) // Clear any previous error
     try {
-      const data = await api.getChannel(value.replace('/', ''))
-      if (!data) {
+      const data = await sdk.getFarcasterChannel(value.replace('/', ''))
+      if (!data.data) {
         setError("Couldn't find that channel.")
       } else {
-        setChannel(data)
+        setChannel(data.data)
         setOpen(false)
       }
     } catch (e) {
@@ -574,8 +574,8 @@ function QuoteCast() {
       if (value.includes('x.com') || value.includes('twitter.com')) {
         setEmbed(value)
       } else {
-        const data = await api.getCast(value)
-        setQuote(data ?? null)
+        const data = await sdk.getFarcasterCast(value)
+        setQuote(data.data ?? null)
       }
     }
     setOpen(false)

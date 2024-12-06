@@ -36,8 +36,8 @@ export class AnonWorldSDK {
   private permissionedAction!: ProofManager
   private hasher!: (a: string, b: string) => string
 
-  constructor(apiUrl: string) {
-    this.api = new Api(apiUrl)
+  constructor(apiUrl?: string) {
+    this.api = new Api(apiUrl || 'https://api.anon.world')
   }
 
   async instantiate() {
@@ -106,5 +106,21 @@ export class AnonWorldSDK {
 
   async getPost(hash: string) {
     return await this.api.getPost(hash)
+  }
+
+  async getFarcasterCast(identifier: string) {
+    return await this.api.getFarcasterCast(identifier)
+  }
+
+  async getFarcasterIdentity(address: string) {
+    return await this.api.getFarcasterIdentity(address)
+  }
+
+  async getFarcasterChannel(channelId: string) {
+    return await this.api.getFarcasterChannel(channelId)
+  }
+
+  async uploadImage(image: File) {
+    return await this.api.uploadImage(image)
   }
 }

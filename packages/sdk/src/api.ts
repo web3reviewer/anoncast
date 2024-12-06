@@ -1,5 +1,12 @@
 import { ProofData } from '@anonworld/zk'
-import { ApiResponse, Cast, RequestConfig } from './types'
+import {
+  ApiResponse,
+  Cast,
+  Channel,
+  Identity,
+  RequestConfig,
+  UploadImageResponse,
+} from './types'
 
 export class Api {
   private baseUrl: string
@@ -133,5 +140,28 @@ export class Api {
 
   async getPost(hash: string) {
     return await this.request<Cast>(`/posts/${hash}`)
+  }
+
+  async getFarcasterCast(identifier: string) {
+    return await this.request<Cast>(`/farcaster/casts?identifier=${identifier}`)
+  }
+
+  async getFarcasterIdentity(address: string) {
+    return await this.request<Identity>(`/farcaster/identities?address=${address}`)
+  }
+
+  async getFarcasterChannel(channelId: string) {
+    return await this.request<Channel>(`/farcaster/channels/${channelId}`)
+  }
+
+  async uploadImage(image: File) {
+    const formData = new FormData()
+    formData.append('image', image)
+
+    return await this.request<UploadImageResponse>('/upload', {
+      method: 'POST',
+      body: formData,
+      isFormData: true,
+    })
   }
 }

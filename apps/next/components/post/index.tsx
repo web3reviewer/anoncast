@@ -22,7 +22,6 @@ import { useBalance } from '@/hooks/use-balance'
 import { DELETE_AMOUNT, PROMOTE_AMOUNT, LAUNCH_AMOUNT, LAUNCH_FID } from '@/lib/utils'
 import { usePromotePost } from '@/hooks/use-promote-post'
 import { useDeletePost } from '@/hooks/use-delete-post'
-import { api } from '@/lib/api'
 import { useRouter } from 'next/navigation'
 import { hashMessage } from 'viem'
 import { Input } from '../ui/input'
@@ -590,7 +589,7 @@ function RevealButton({
 function RevealBadge({ reveal }: { reveal: Reveal }) {
   const { data } = useQuery({
     queryKey: ['identity', reveal.address],
-    queryFn: () => api.getIdentity(reveal.address!),
+    queryFn: () => sdk.getFarcasterIdentity(reveal.address!),
   })
 
   const formatAddress = (address: string) => {
@@ -599,20 +598,20 @@ function RevealBadge({ reveal }: { reveal: Reveal }) {
 
   return (
     <div className="flex flex-row items-center w-full">
-      {data?.username && (
+      {data?.data?.username && (
         <a
-          href={`https://warpcast.com/${data.username}`}
+          href={`https://warpcast.com/${data.data.username}`}
           target="_blank"
           rel="noreferrer"
           className="text-sm font-semibold cursor-pointer hover:text-zinc-400 flex flex-row items-center gap-1 text-green-400 hover:text-green-200"
         >
           <span>{`revealed as `}</span>
-          <img src={data.pfp_url} className="w-4 h-4 rounded-full" alt="pfp" />
-          <span>{data.username}</span>
+          <img src={data.data.pfp_url} className="w-4 h-4 rounded-full" alt="pfp" />
+          <span>{data.data.username}</span>
           <span>{` ${timeAgo(reveal.revealedAt!)}`}</span>
         </a>
       )}
-      {!data?.username && (
+      {!data?.data?.username && (
         <a
           href={`https://basescan.org/address/${reveal.address}`}
           target="_blank"
