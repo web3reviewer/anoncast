@@ -9,8 +9,8 @@
     "**/node_modules",
     "**/dist",
     "**/types",
-    "apps/next/out",
-    "apps/next/.next",
-    "apps/next/.tamagui"
+    "apps/anoncast/out",
+    "apps/anoncast/.next",
+    "apps/anoncast/.tamagui"
   ]
 }
