@@ -1,7 +1,8 @@
 'use client'
 
 import { useToast } from '@/hooks/use-toast'
-import { Cast, Channel } from '@/lib/types'
+import { Channel } from '@/lib/types'
+import { Cast } from '@anonworld/sdk/types'
 import { useRouter } from 'next/navigation'
 import { createContext, useContext, useState, ReactNode } from 'react'
 import { hashMessage } from 'viem'
