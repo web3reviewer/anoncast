@@ -5,9 +5,8 @@ import { Cast, Channel } from '@anonworld/sdk/types'
 import { useRouter } from 'next/navigation'
 import { createContext, useContext, useState, ReactNode } from 'react'
 import { hashMessage } from 'viem'
-import { useAccount, useSignMessage } from 'wagmi'
 import { ToastAction } from '../ui/toast'
-import { CREATE_ACTION_ID, sdk } from '@/lib/utils'
+import { CREATE_ACTION_ID } from '@/lib/utils'
 import { PerformActionStatus, usePerformAction } from '@/lib/hooks/use-perform-action'
 
 interface CreatePostContextProps {
