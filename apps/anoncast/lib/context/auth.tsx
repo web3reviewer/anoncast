@@ -7,10 +7,14 @@ import {
   RainbowKitProvider,
 } from '@rainbow-me/rainbowkit'
 import { createSiweMessage } from 'viem/siwe'
+import { hashMessage, recoverPublicKey, verifyMessage } from 'viem'
+import { publicKeyToAddress } from 'viem/accounts'
+import { useAccount } from 'wagmi'
 
 const STORAGE_KEY = 'auth:v0'
 
 type SiweResult = {
+  address: `0x${string}`
   message: string
   signature: `0x${string}`
 }
@@ -23,6 +27,24 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [siwe, setSiwe] = useState<SiweResult | undefined>()
+  const { address } = useAccount()
+
+  const signIn = async (message: string, signature: `0x${string}`) => {
+    const pubKey = await recoverPublicKey({ hash: hashMessage(message), signature })
+    const address = publicKeyToAddress(pubKey)
+    if (address) {
+      const payload = { address, message, signature }
+      if (await verifyMessage(payload)) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(payload))
+        setSiwe(payload)
+        return true
+      }
+    }
+
+    localStorage.removeItem(STORAGE_KEY)
+    setSiwe(undefined)
+    return false
+  }
 
   const adapter = useMemo(
     () =>
@@ -45,13 +67,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         },
 
         verify: async ({ message, signature }) => {
-          const payload = {
-            message,
-            signature: signature as `0x${string}`,
-          }
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(payload))
-          setSiwe(payload)
-          return true
+          return signIn(message, signature as `0x${string}`)
         },
 
         signOut: async () => {
@@ -63,9 +79,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   )
 
   useEffect(() => {
-    const payload = localStorage.getItem(STORAGE_KEY)
-    if (payload) {
-      setSiwe(JSON.parse(payload))
+    const item = localStorage.getItem(STORAGE_KEY)
+    if (item) {
+      const payload = JSON.parse(item)
+      signIn(payload.message, payload.signature)
     }
   }, [])
 
@@ -73,7 +90,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     <AuthContext.Provider value={{ siwe }}>
       <RainbowKitAuthenticationProvider
         adapter={adapter}
-        status={siwe ? 'authenticated' : 'unauthenticated'}
+        status={siwe && address === siwe.address ? 'authenticated' : 'unauthenticated'}
       >
         <RainbowKitProvider>{children}</RainbowKitProvider>
       </RainbowKitAuthenticationProvider>
