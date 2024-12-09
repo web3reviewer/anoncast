@@ -276,7 +276,9 @@ async function handlePromotePost(
     }
   }
 
-  if (twitterConfig && !hasTwitterRelationship) {
+  const isTweetable = !cast.cast.text.includes('@bankr')
+
+  if (twitterConfig && !hasTwitterRelationship && isTweetable) {
     const twitter = new TwitterService(twitterConfig)
     const response = await twitter.promoteToTwitter(cast.cast, undefined, data.reply)
     if (response.tweetId) {
