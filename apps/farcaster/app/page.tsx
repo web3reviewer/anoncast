@@ -15,7 +15,7 @@ export default function Home() {
     if (isLoaded) {
       setTimeout(() => {
         setShowLoaded(true)
-      }, 3000)
+      }, 0)
     }
   }, [isLoaded])
 
