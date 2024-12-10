@@ -5,11 +5,11 @@ import {
   getPostChildren,
 } from '@anonworld/db'
 import { neynar } from '../services/neynar'
-import { TwitterConfig, TwitterService } from '../services/twitter'
+import { twitter } from '../services/twitter'
 
 export type DeletePostActionMetadata = {
   fid: number
-  twitterConfig?: TwitterConfig
+  twitter?: string
 }
 
 export type DeletePostActionData = {
@@ -35,9 +35,8 @@ export class DeletePostAction {
           hash: child.target_id,
         })
         await deletePostDb(child.target_id)
-      } else if (child.target === 'twitter' && this.metadata.twitterConfig) {
-        const twitter = new TwitterService(this.metadata.twitterConfig)
-        await twitter.deleteTweet(child.target_id)
+      } else if (child.target === 'twitter' && this.metadata.twitter) {
+        await twitter.deleteTweet(this.metadata.twitter, child.target_id)
       } else {
         continue
       }

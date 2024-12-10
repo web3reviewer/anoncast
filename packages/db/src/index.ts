@@ -10,6 +10,7 @@ import {
   postCredentialsTable,
   postRelationshipsTable,
   postsTable,
+  twitterAccountsTable,
 } from './db/schema'
 
 export type Credential = typeof credentialsTable.$inferSelect
@@ -241,4 +242,12 @@ export const validateMerkleRoots = async (roots: string[]) => {
     .select()
     .from(merkleRootsTable)
     .where(inArray(merkleRootsTable.root, roots))
+}
+
+export const getTwitterAccount = async (username: string) => {
+  const [account] = await db
+    .select()
+    .from(twitterAccountsTable)
+    .where(eq(twitterAccountsTable.username, username))
+  return account
 }
