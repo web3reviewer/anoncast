@@ -206,3 +206,14 @@ export const createPostCredentials = async (hash: string, roots: string[]) => {
     }))
   )
 }
+
+export const getBulkCredentials = async (hashes: string[]) => {
+  return await db
+    .select()
+    .from(postCredentialsTable)
+    .innerJoin(
+      credentialsTable,
+      eq(postCredentialsTable.credential_id, credentialsTable.id)
+    )
+    .where(inArray(postCredentialsTable.post_hash, hashes))
+}

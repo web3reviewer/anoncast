@@ -520,6 +520,7 @@ export type Cast = {
   children: Array<Relationship>
   siblings: Array<Relationship>
   parent?: Relationship
+  credentials: Array<Credential>
 }
 
 export type Reveal = {
@@ -535,4 +536,15 @@ export type Relationship = {
   target: string
   targetAccount: string
   targetId: string
+}
+
+export type Credential = {
+  id: string
+  type: string
+  metadata: {
+    ticker: string
+    chainId: number
+    tokenAddress: string
+    minBalance: string
+  }
 }
