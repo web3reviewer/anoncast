@@ -3,7 +3,6 @@ import { SendTweetV2Params, TwitterApi } from 'twitter-api-v2'
 import { getTwitterAccount } from '@anonworld/db'
 
 export type TwitterConfig = {
-  username: string
   appKey: string
   appSecret: string
   accessToken: string
