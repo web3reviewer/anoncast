@@ -39,27 +39,17 @@ export class RedisService {
     return this.client.get(key)
   }
 
-  async setMerkleTree(key: string, tree: string, root: string) {
+  async setMerkleTree(key: string, tree: string) {
     await this.client.set(key, tree)
-    await this.client.set(`${key}:root:${root}`, 'true', 'EX', 60 * 60)
-  }
-
-  async isValidMerkleTreeRoot(key: string, root: string) {
-    return this.client.exists(`${key}:root:${root}`)
   }
 
   async getMerkleTreeForCredential(credentialId: string) {
     return this.client.get(`merkle-tree:credential:${credentialId}`)
   }
 
-  async setMerkleTreeForCredential(credentialId: string, tree: string, root: string) {
+  async setMerkleTreeForCredential(credentialId: string, tree: string) {
     const key = `merkle-tree:credential:${credentialId}`
     await this.client.set(key, tree)
-    await this.client.set(`${key}:root:${root}`, 'true', 'EX', 60 * 60)
-  }
-
-  async isValidMerkleTreeRootForCredential(credentialId: string, root: string) {
-    return this.client.exists(`merkle-tree:credential:${credentialId}:root:${root}`)
   }
 
   async actionOccurred(actionId: string, hash: string) {

@@ -1,6 +1,6 @@
 import { getAllCredentials, getAllFarcasterAccounts } from '@anonworld/db'
 import { buildFeeds } from '../src/routes/feeds'
-import { buildMerkleTreeForCredential } from '../src/routes/merkle-tree'
+import { buildMerkleTree } from '../src/routes/merkle-tree'
 
 const updateFeeds = async () => {
   const accounts = await getAllFarcasterAccounts()
@@ -14,7 +14,19 @@ const updateMerkleTrees = async () => {
   const credentials = await getAllCredentials()
   for (const credential of credentials) {
     console.log(`[merkle] updating merkle tree for ${credential.id}`)
-    await buildMerkleTreeForCredential(credential)
+
+    const { chainId, tokenAddress, minBalance } = credential.metadata as {
+      chainId: number
+      tokenAddress: string
+      minBalance: string
+    }
+
+    await buildMerkleTree({
+      chainId,
+      tokenAddress,
+      minBalance: BigInt(minBalance),
+      credentialId: credential.id,
+    })
   }
 }
 

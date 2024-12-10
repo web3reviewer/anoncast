@@ -92,9 +92,9 @@ export const credentialsTable = pgTable('credentials', {
 export const merkleRootsTable = pgTable('merkle_roots', {
   root: varchar({ length: 255 }).primaryKey(),
   credential_id: varchar({ length: 255 }).references(() => credentialsTable.id),
-  chain_id: integer('chain_id'),
-  token_address: varchar({ length: 255 }),
-  min_balance: varchar({ length: 255 }),
+  chain_id: integer('chain_id').notNull(),
+  token_address: varchar({ length: 255 }).notNull(),
+  min_balance: varchar({ length: 255 }).notNull(),
   created_at: timestamp().notNull().defaultNow(),
   updated_at: timestamp().notNull().defaultNow(),
 })

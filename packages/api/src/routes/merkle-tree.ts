@@ -1,4 +1,4 @@
-import { createMerkleRoot, Credential, getCredential } from '@anonworld/db'
+import { createMerkleRoot, getCredential } from '@anonworld/db'
 import { createElysia } from '../utils'
 import { t } from 'elysia'
 import { redis } from '../services/redis'
@@ -42,8 +42,20 @@ export const merkleTreeRoutes = createElysia({ prefix: '/merkle-tree' })
         throw new Error('Credential not found')
       }
 
-      const tree = await buildMerkleTreeForCredential(credential)
-      return JSON.parse(tree.export())
+      const { chainId, tokenAddress, minBalance } = credential.metadata as {
+        chainId: number
+        tokenAddress: string
+        minBalance: string
+      }
+
+      const tree = await buildMerkleTree({
+        chainId,
+        tokenAddress,
+        minBalance: BigInt(minBalance),
+        credentialId: credential.id,
+      })
+
+      return tree
     },
     {
       params: t.Object({
@@ -51,25 +63,6 @@ export const merkleTreeRoutes = createElysia({ prefix: '/merkle-tree' })
       }),
     }
   )
-
-export const buildMerkleTreeForCredential = async (credential: Credential) => {
-  const { chainId, tokenAddress, minBalance } = credential.metadata as {
-    chainId: number
-    tokenAddress: string
-    minBalance: string
-  }
-
-  const tree = await buildMerkleTree({
-    chainId,
-    tokenAddress,
-    minBalance: BigInt(minBalance),
-    credentialId: credential.id,
-  })
-
-  await redis.setMerkleTreeForCredential(credential.id, tree.export(), tree.root)
-
-  return tree
-}
 
 export const buildMerkleTree = async (params: {
   chainId: number
@@ -90,11 +83,16 @@ export const buildMerkleTree = async (params: {
     leaves.sort((a, b) => a.localeCompare(b))
   )
 
-  await redis.setMerkleTree(getMerkleTreeKey(params), tree.export(), tree.root)
+  const exportedTree = tree.export()
+
+  await redis.setMerkleTree(getMerkleTreeKey(params), exportedTree)
+  if (params.credentialId) {
+    await redis.setMerkleTreeForCredential(params.credentialId, exportedTree)
+  }
 
   await createMerkleRoot(params, tree.root)
 
-  return tree
+  return JSON.parse(exportedTree)
 }
 
 const getMerkleTreeKey = (params: {
