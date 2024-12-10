@@ -187,7 +187,10 @@ export const getCredential = async (credentialId: string) => {
 }
 
 export const createMerkleRoot = async (credentialId: string, root: string) => {
-  await db.insert(merkleRootsTable).values({ credential_id: credentialId, root })
+  await db
+    .insert(merkleRootsTable)
+    .values({ credential_id: credentialId, root })
+    .onConflictDoNothing()
 }
 
 export const createPostCredentials = async (hash: string, roots: string[]) => {
