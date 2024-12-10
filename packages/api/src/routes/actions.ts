@@ -50,25 +50,22 @@ export const actionsRoutes = createElysia({ prefix: '/actions' }).post(
 
     let response: any
     try {
-      switch (action.actions.type) {
+      switch (action.type) {
         case 'CREATE_POST': {
           response = await handleCreatePost(
-            action.actions.metadata as { fid: number },
+            action.metadata as { fid: number },
             body.data,
             roots
           )
           break
         }
         case 'DELETE_POST': {
-          response = await handleDeletePost(
-            action.actions.metadata as { fid: number },
-            body.data
-          )
+          response = await handleDeletePost(action.metadata as { fid: number }, body.data)
           break
         }
         case 'PROMOTE_POST': {
           response = await handlePromotePost(
-            action.actions.metadata as { fid?: number; twitterConfig?: TwitterConfig },
+            action.metadata as { fid?: number; twitterConfig?: TwitterConfig },
             body.data
           )
           break
@@ -76,8 +73,7 @@ export const actionsRoutes = createElysia({ prefix: '/actions' }).post(
       }
     } catch (error) {
       await logActionExecution({
-        account_id: action.accounts.id,
-        action_id: action.actions.id,
+        action_id: action.id,
         action_data: body.data,
         status: 'FAILED',
         error: error,
@@ -86,8 +82,7 @@ export const actionsRoutes = createElysia({ prefix: '/actions' }).post(
     }
 
     await logActionExecution({
-      account_id: action.accounts.id,
-      action_id: action.actions.id,
+      action_id: action.id,
       action_data: body.data,
       status: 'SUCCESS',
       response,

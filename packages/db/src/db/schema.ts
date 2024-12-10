@@ -21,9 +21,7 @@ export const accountsTable = pgTable('accounts', {
 
 export const actionsTable = pgTable('actions', {
   id: uuid('id').defaultRandom().primaryKey(),
-  account_id: uuid('account_id')
-    .references(() => accountsTable.id)
-    .notNull(),
+  account_id: uuid('account_id').references(() => accountsTable.id),
   type: varchar({ length: 255 }).notNull(),
   credential_id: varchar({ length: 255 })
     .references(() => credentialsTable.id)
@@ -84,9 +82,7 @@ export const postCredentialsTable = pgTable('post_credentials', {
 
 export const actionExecutionsTable = pgTable('action_executions', {
   id: uuid('id').defaultRandom().primaryKey(),
-  account_id: uuid('account_id')
-    .references(() => accountsTable.id)
-    .notNull(),
+  account_id: uuid('account_id').references(() => accountsTable.id),
   action_id: uuid('action_id')
     .references(() => actionsTable.id)
     .notNull(),

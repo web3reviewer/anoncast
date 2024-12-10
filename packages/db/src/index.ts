@@ -2,7 +2,6 @@ import 'dotenv/config'
 import { drizzle } from 'drizzle-orm/node-postgres'
 import { and, eq, inArray, isNull } from 'drizzle-orm'
 import {
-  accountsTable,
   actionExecutionsTable,
   actionsTable,
   credentialsTable,
@@ -21,7 +20,6 @@ export const getAction = async (actionId: string) => {
   const [action] = await db
     .select()
     .from(actionsTable)
-    .innerJoin(accountsTable, eq(actionsTable.account_id, accountsTable.id))
     .where(eq(actionsTable.id, actionId))
     .limit(1)
 
