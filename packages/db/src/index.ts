@@ -1,6 +1,6 @@
 import 'dotenv/config'
 import { drizzle } from 'drizzle-orm/node-postgres'
-import { and, eq, inArray, isNull } from 'drizzle-orm'
+import { and, eq, inArray, isNotNull, isNull } from 'drizzle-orm'
 import {
   actionExecutionsTable,
   actionsTable,
@@ -184,10 +184,24 @@ export const getCredential = async (credentialId: string) => {
   return credential
 }
 
-export const createMerkleRoot = async (credentialId: string, root: string) => {
+export const createMerkleRoot = async (
+  params: {
+    credentialId?: string
+    chainId: number
+    tokenAddress: string
+    minBalance: bigint
+  },
+  root: string
+) => {
   await db
     .insert(merkleRootsTable)
-    .values({ credential_id: credentialId, root })
+    .values({
+      chain_id: params.chainId,
+      token_address: params.tokenAddress,
+      min_balance: params.minBalance.toString(),
+      credential_id: params.credentialId,
+      root: root,
+    })
     .onConflictDoNothing()
 }
 
@@ -195,12 +209,17 @@ export const createPostCredentials = async (hash: string, roots: string[]) => {
   const credentials = await db
     .select()
     .from(merkleRootsTable)
-    .where(inArray(merkleRootsTable.root, roots))
+    .where(
+      and(
+        inArray(merkleRootsTable.root, roots),
+        isNotNull(merkleRootsTable.credential_id)
+      )
+    )
 
   await db.insert(postCredentialsTable).values(
     credentials.map((credential) => ({
       post_hash: hash,
-      credential_id: credential.credential_id,
+      credential_id: credential.credential_id!,
     }))
   )
 }

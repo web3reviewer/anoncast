@@ -63,10 +63,10 @@ export const buildMerkleTreeForCredential = async (credential: Credential) => {
     chainId,
     tokenAddress,
     minBalance: BigInt(minBalance),
+    credentialId: credential.id,
   })
 
   await redis.setMerkleTreeForCredential(credential.id, tree.export(), tree.root)
-  await createMerkleRoot(credential.id, tree.root)
 
   return tree
 }
@@ -75,6 +75,7 @@ export const buildMerkleTree = async (params: {
   chainId: number
   tokenAddress: string
   minBalance: bigint
+  credentialId?: string
 }) => {
   const owners = await simplehash.getTokenOwners(params)
 
@@ -90,6 +91,8 @@ export const buildMerkleTree = async (params: {
   )
 
   await redis.setMerkleTree(getMerkleTreeKey(params), tree.export(), tree.root)
+
+  await createMerkleRoot(params, tree.root)
 
   return tree
 }

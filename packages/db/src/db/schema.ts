@@ -8,20 +8,8 @@ import {
   primaryKey,
 } from 'drizzle-orm/pg-core'
 
-export const accountsTable = pgTable('accounts', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  creator_address: varchar({ length: 255 }).notNull(),
-  fid: integer('fid')
-    .references(() => farcasterAccountsTable.fid)
-    .notNull(),
-  metadata: jsonb('metadata'),
-  created_at: timestamp().notNull().defaultNow(),
-  updated_at: timestamp().notNull().defaultNow(),
-})
-
 export const actionsTable = pgTable('actions', {
   id: uuid('id').defaultRandom().primaryKey(),
-  account_id: uuid('account_id').references(() => accountsTable.id),
   type: varchar({ length: 255 }).notNull(),
   credential_id: varchar({ length: 255 })
     .references(() => credentialsTable.id)
@@ -82,7 +70,6 @@ export const postCredentialsTable = pgTable('post_credentials', {
 
 export const actionExecutionsTable = pgTable('action_executions', {
   id: uuid('id').defaultRandom().primaryKey(),
-  account_id: uuid('account_id').references(() => accountsTable.id),
   action_id: uuid('action_id')
     .references(() => actionsTable.id)
     .notNull(),
@@ -104,9 +91,10 @@ export const credentialsTable = pgTable('credentials', {
 
 export const merkleRootsTable = pgTable('merkle_roots', {
   root: varchar({ length: 255 }).primaryKey(),
-  credential_id: varchar({ length: 255 })
-    .references(() => credentialsTable.id)
-    .notNull(),
+  credential_id: varchar({ length: 255 }).references(() => credentialsTable.id),
+  chain_id: integer('chain_id'),
+  token_address: varchar({ length: 255 }),
+  min_balance: varchar({ length: 255 }),
   created_at: timestamp().notNull().defaultNow(),
   updated_at: timestamp().notNull().defaultNow(),
 })
