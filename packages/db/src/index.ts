@@ -13,6 +13,7 @@ import {
 } from './db/schema'
 
 export type Credential = typeof credentialsTable.$inferSelect
+export type Action = typeof actionsTable.$inferSelect
 
 export const db = drizzle(process.env.DATABASE_URL as string)
 

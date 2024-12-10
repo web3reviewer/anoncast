@@ -90,12 +90,6 @@ export class ProofManager {
 
     return await backend.generateProof(witness)
   }
-
-  async extractData(publicInputs: string[]) {
-    const root = publicInputs[0]
-
-    return { root }
-  }
 }
 
 export const merkleMembership = new ProofManager(CircuitType.MerkleMembership)
