@@ -1,10 +1,11 @@
 import { createElysia } from '../utils'
 import { t } from 'elysia'
-import { permissionedAction } from '@anonworld/zk'
+import { merkleMembership } from '@anonworld/zk'
 import { redis } from '../services/redis'
 import { hashMessage } from 'viem'
 import {
   createPost,
+  createPostCredentials,
   createPostRelationship,
   deletePost,
   deletePostRelationship,
@@ -19,32 +20,37 @@ import { TwitterConfig, TwitterService } from '../services/twitter'
 export const actionsRoutes = createElysia({ prefix: '/actions' }).post(
   '/submit',
   async ({ body }) => {
-    const verified = await permissionedAction.verify({
-      proof: new Uint8Array(body.proof.proof),
-      publicInputs: body.proof.publicInputs,
-    })
-    if (!verified) {
-      throw new Error('Invalid proof')
+    const roots = []
+    for (const proof of body.proofs) {
+      const verified = await merkleMembership.verify({
+        proof: new Uint8Array(proof.proof),
+        publicInputs: proof.publicInputs,
+      })
+      if (!verified) {
+        throw new Error('Invalid proof')
+      }
+
+      const { root } = await merkleMembership.extractData(proof.publicInputs)
+      roots.push(root)
     }
 
-    const { root, dataHash } = await permissionedAction.extractData(
-      body.proof.publicInputs
+    const action = await getAction(body.actionId)
+
+    const rootValidations = await Promise.all(
+      roots.map((root) =>
+        redis.isValidMerkleTreeRootForCredential(action.actions.credential_id, root)
+      )
     )
 
-    if (!(await redis.isValidMerkleTreeRoot(body.actionId, root))) {
+    if (!rootValidations.some((isValid) => isValid)) {
       throw new Error('Invalid merkle tree root')
     }
 
     const hash = hashMessage(JSON.stringify(body.data))
-    if (hash !== dataHash) {
-      throw new Error('Invalid message hash')
-    }
 
     if (await redis.actionOccurred(body.actionId, hash)) {
       throw new Error('Action already occurred')
     }
-
-    const action = await getAction(body.actionId)
 
     let response: any
     try {
@@ -52,7 +58,8 @@ export const actionsRoutes = createElysia({ prefix: '/actions' }).post(
         case 'CREATE_POST': {
           response = await handleCreatePost(
             action.actions.metadata as { fid: number },
-            body.data
+            body.data,
+            roots
           )
           break
         }
@@ -97,11 +104,13 @@ export const actionsRoutes = createElysia({ prefix: '/actions' }).post(
   {
     body: t.Object({
       actionId: t.String(),
-      proof: t.Object({
-        proof: t.Array(t.Number()),
-        publicInputs: t.Array(t.String()),
-      }),
       data: t.Any(),
+      proofs: t.Array(
+        t.Object({
+          proof: t.Array(t.Number()),
+          publicInputs: t.Array(t.String()),
+        })
+      ),
     }),
   }
 )
@@ -115,7 +124,8 @@ async function handleCreatePost(
     channel?: string
     parent?: string
     revealHash?: string
-  }
+  },
+  roots: string[]
 ) {
   const { text, embeds, quote, channel, parent, revealHash } = data
 
@@ -138,6 +148,8 @@ async function handleCreatePost(
     data: { ...data, revealHash: undefined },
     reveal_hash: revealHash,
   })
+
+  await createPostCredentials(response.cast.hash, roots)
 
   return {
     success: true,
