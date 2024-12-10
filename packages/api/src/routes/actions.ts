@@ -13,6 +13,7 @@ import {
   getPost,
   getPostChildren,
   logActionExecution,
+  validateMerkleRoots,
 } from '@anonworld/db'
 import { neynar } from '../services/neynar'
 import { TwitterConfig, TwitterService } from '../services/twitter'
@@ -36,13 +37,8 @@ export const actionsRoutes = createElysia({ prefix: '/actions' }).post(
 
     const action = await getAction(body.actionId)
 
-    const rootValidations = await Promise.all(
-      roots.map((root) =>
-        redis.isValidMerkleTreeRootForCredential(action.actions.credential_id, root)
-      )
-    )
-
-    if (!rootValidations.some((isValid) => isValid)) {
+    const rootValidations = await validateMerkleRoots(roots)
+    if (rootValidations.length === 0) {
       throw new Error('Invalid merkle tree root')
     }
 

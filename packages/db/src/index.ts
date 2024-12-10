@@ -217,3 +217,10 @@ export const getBulkCredentials = async (hashes: string[]) => {
     )
     .where(inArray(postCredentialsTable.post_hash, hashes))
 }
+
+export const validateMerkleRoots = async (roots: string[]) => {
+  return await db
+    .select()
+    .from(merkleRootsTable)
+    .where(inArray(merkleRootsTable.root, roots))
+}
