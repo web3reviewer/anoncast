@@ -10,8 +10,6 @@ import {
 
 export const accountsTable = pgTable('accounts', {
   id: uuid('id').defaultRandom().primaryKey(),
-  chain_id: integer('chain_id').notNull(),
-  token_address: varchar({ length: 255 }).notNull(),
   creator_address: varchar({ length: 255 }).notNull(),
   fid: integer('fid')
     .references(() => farcasterAccountsTable.fid)
@@ -27,7 +25,6 @@ export const actionsTable = pgTable('actions', {
     .references(() => accountsTable.id)
     .notNull(),
   type: varchar({ length: 255 }).notNull(),
-  threshold: varchar({ length: 255 }).notNull(),
   credential_id: varchar({ length: 255 })
     .references(() => credentialsTable.id)
     .notNull(),
