@@ -77,7 +77,10 @@ export class Api {
     actionId,
     data,
   }: {
-    proofs: ProofData[]
+    proofs: {
+      proof: number[]
+      publicInputs: string[]
+    }[]
     actionId: string
     data: any
   }) {
@@ -88,10 +91,7 @@ export class Api {
         body: JSON.stringify({
           actionId,
           data,
-          proofs: proofs.map((proof) => ({
-            proof: Array.from(proof.proof),
-            publicInputs: proof.publicInputs,
-          })),
+          proofs,
         }),
         maxRetries: 3,
       }

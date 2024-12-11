@@ -57,7 +57,7 @@ export const CreatePostProvider = ({
   const router = useRouter()
   const { performAction, status } = usePerformAction({
     onSuccess: (response) => {
-      sdk.actions.openUrl(`https://warpcast.com/~/conversations/${response.data?.hash}`)
+      sdk.actions.openUrl(`https://warpcast.com/~/conversations/${response.hash}`)
       sdk.actions.close()
     },
     onError: (error) => {

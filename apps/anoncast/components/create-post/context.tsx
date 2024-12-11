@@ -72,7 +72,7 @@ export const CreatePostProvider = ({
             altText="View post"
             onClick={() => {
               window.open(
-                `https://warpcast.com/~/conversations/${response.data?.hash}`,
+                `https://warpcast.com/~/conversations/${response.hash}`,
                 '_blank'
               )
             }}

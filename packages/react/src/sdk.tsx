@@ -1,8 +1,10 @@
 import { AnonWorldSDK } from '@anonworld/sdk'
 import { createContext, useContext, ReactNode, useMemo } from 'react'
+import { useCredentials } from './hooks/use-credentials'
 
 interface SDKContextValue {
   sdk: AnonWorldSDK
+  credentials: ReturnType<typeof useCredentials>
 }
 
 export const SDKContext = createContext<SDKContextValue | undefined>(undefined)
@@ -12,8 +14,11 @@ export const SDKProvider = ({
   apiUrl,
 }: { children: ReactNode; apiUrl?: string }) => {
   const sdk = useMemo(() => new AnonWorldSDK(apiUrl), [apiUrl])
+  const credentials = useCredentials(sdk)
 
-  return <SDKContext.Provider value={{ sdk }}>{children}</SDKContext.Provider>
+  return (
+    <SDKContext.Provider value={{ sdk, credentials }}>{children}</SDKContext.Provider>
+  )
 }
 
 export const useSDK = () => {

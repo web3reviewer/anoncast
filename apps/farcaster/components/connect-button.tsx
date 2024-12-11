@@ -1,43 +1,32 @@
 'use client'
 
-import { useAuth } from '@/lib/context/auth'
-import { Button } from './ui/button'
 import { useBalance } from '@/lib/hooks/use-balance'
 import { formatEther } from 'viem'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem } from './ui/dropdown-menu'
-import { DropdownMenuTrigger } from './ui/dropdown-menu'
-import { LogOut } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import sdk, { FrameContext } from '@farcaster/frame-sdk'
 
 export const ConnectButton = () => {
-  const { siwe, signIn, signOut, context } = useAuth()
+  const [context, setContext] = useState<FrameContext>()
+  const [isLoaded, setIsLoaded] = useState(false)
 
-  if (!siwe) {
-    return (
-      <Button
-        onClick={signIn}
-        className="font-bold text-md rounded-md hover:scale-105 transition-all duration-300"
-      >
-        Sign In
-      </Button>
-    )
-  }
+  useEffect(() => {
+    const load = async () => {
+      setContext(await sdk.context)
+      sdk.actions.ready()
+    }
+    if (sdk && !isLoaded) {
+      setIsLoaded(true)
+      load()
+    }
+  }, [isLoaded])
+
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <div className="flex flex-row rounded-md overflow-hidden bg-white items-center hover:scale-105 transition-all duration-300 cursor-pointer">
-          <Balance />
-          <div className="text-md font-bold bg-gray-200 text-black rounded-md py-1.5 px-3 m-0.5">
-            {context?.user?.username}
-          </div>
-        </div>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-48">
-        <DropdownMenuItem onClick={signOut} className="cursor-pointer">
-          <LogOut className="text-red-500" />
-          <span className="text-red-500">Sign Out</span>
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <div className="flex flex-row rounded-md overflow-hidden bg-white items-center hover:scale-105 transition-all duration-300 cursor-pointer">
+      <Balance />
+      <div className="text-md font-bold bg-gray-200 text-black rounded-md py-1.5 px-3 m-0.5">
+        {context?.user?.username}
+      </div>
+    </div>
   )
 }
 

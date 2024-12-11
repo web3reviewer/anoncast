@@ -18,7 +18,7 @@
     "@radix-ui/react-slot": "^1.1.0",
     "@radix-ui/react-toast": "^1.2.2",
     "@radix-ui/react-tooltip": "^1.1.4",
-    "@tanstack/react-query": "^5.62.3",
+    "@tanstack/react-query": "^5.60.5",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "copy-webpack-plugin": "^12.0.2",
@@ -31,8 +31,8 @@
     "react-dom": "^18",
     "tailwind-merge": "^2.5.4",
     "tailwindcss-animate": "^1.0.7",
-    "viem": "2.x",
-    "wagmi": "^2.13.4",
+    "viem": "^2.21.53",
+    "wagmi": "^2.13.3",
     "webpack": "^5.96.1"
   },
   "devDependencies": {

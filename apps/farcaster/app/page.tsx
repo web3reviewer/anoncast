@@ -4,27 +4,29 @@ import ActionComponent from '@/components/action'
 import { ConnectButton } from '@/components/connect-button'
 import { Logo } from '@/components/logo'
 import { CreatePostProvider } from '@/components/create-post/context'
-import { useAuth } from '@/lib/context/auth'
 import { useEffect, useState } from 'react'
+import { sdk } from '@farcaster/frame-sdk'
 
 export default function Home() {
-  const { isLoaded } = useAuth()
-  const [showLoaded, setShowLoaded] = useState(false)
+  const [isLoaded, setIsLoaded] = useState(false)
 
   useEffect(() => {
-    if (isLoaded) {
-      setTimeout(() => {
-        setShowLoaded(true)
-      }, 0)
+    const load = async () => {
+      await sdk.actions.ready()
+      setIsLoaded(true)
+    }
+    if (sdk && !isLoaded) {
+      load()
     }
   }, [isLoaded])
 
   return (
     <div className="flex flex-col items-center justify-center grow min-h-screen">
       <div
-        className={`absolute inset-0 transition-opacity duration-1000 ${isLoaded && showLoaded ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+        className={`absolute inset-0 transition-opacity duration-1000 ${isLoaded ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
       >
-        {isLoaded && <Content />}
+        {' '}
+        <Content />
       </div>
     </div>
   )

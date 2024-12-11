@@ -145,7 +145,7 @@ export function Post({
                     className="text-xs font-medium border text-zinc-400 px-2 py-1 rounded-xl flex flex-row items-center gap-1"
                   >
                     <Coins size={12} />
-                    {`${formatEther(BigInt(c.metadata.minBalance))} ${c.metadata.ticker}`}
+                    {`${formatNumber(Number.parseFloat(formatEther(BigInt(c.metadata.minBalance))))}+ ${c.metadata.ticker}`}
                   </div>
                 ))}
                 {cast.parent_hash && (
@@ -401,7 +401,7 @@ function PromoteButton({ cast }: { cast: Cast }) {
           <ToastAction
             altText="View post"
             onClick={() => {
-              window.open(`https://x.com/i/status/${response.data?.tweetId}`, '_blank')
+              window.open(`https://x.com/i/status/${response.tweetId}`, '_blank')
             }}
           >
             View on X
@@ -492,7 +492,7 @@ function LaunchButton({ cast }: { cast: Cast }) {
             altText="View post"
             onClick={() => {
               window.open(
-                `https://warpcast.com/~/conversations/${response.data?.hash}`,
+                `https://warpcast.com/~/conversations/${response.hash}`,
                 '_blank'
               )
             }}

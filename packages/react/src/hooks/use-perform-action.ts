@@ -1,10 +1,7 @@
 import { useState } from 'react'
-import { PerformActionArgs, PerformActionResponse } from '@anonworld/sdk'
-import { hashMessage } from 'viem'
 import { useSDK } from '../sdk'
 import { useAccount } from 'wagmi'
-
-const STORAGE_KEY = 'auth:v0'
+import { useCredentials } from './use-credentials'
 
 export type PerformActionStatus =
   | {
@@ -15,45 +12,70 @@ export type PerformActionStatus =
       error: string
     }
 
+type CreatePostActionData = {
+  text?: string
+  embeds?: string[]
+  quote?: string
+  channel?: string
+  parent?: string
+  revealHash?: string
+}
+
+type DeletePostActionData = {
+  hash: string
+}
+
+type PromotePostActionData = {
+  hash: string
+  reply?: boolean
+}
+
+type PerformActionData =
+  | CreatePostActionData
+  | DeletePostActionData
+  | PromotePostActionData
+
 export const usePerformAction = ({
   onSuccess,
   onError,
 }: {
-  onSuccess?: (response: PerformActionResponse) => void
+  onSuccess?: (response: {
+    success: boolean
+    hash?: string
+    tweetId?: string
+  }) => void
   onError?: (error: string) => void
 } = {}) => {
-  const { sdk } = useSDK()
+  const { sdk, credentials } = useSDK()
   const [status, setStatus] = useState<PerformActionStatus>({ status: 'idle' })
   const { address } = useAccount()
 
-  const getSiwe = () => {
-    const item = localStorage.getItem(STORAGE_KEY)
-    if (item) {
-      const payload = JSON.parse(item)
-      return payload
-    }
-    return undefined
-  }
-
-  const performAction = async (actionId: string, data: PerformActionArgs['data']) => {
+  const performAction = async (actionId: string, data: PerformActionData) => {
     try {
       if (!address) {
         throw new Error('Not connected')
       }
 
-      const siwe = getSiwe()
-      if (!siwe) {
-        throw new Error('Not signed in')
-      }
-
       setStatus({ status: 'loading' })
 
-      const response = await sdk.performAction({
-        address,
-        signature: siwe.signature,
-        messageHash: hashMessage(siwe.message),
+      const credentialId =
+        actionId === 'e6138573-7b2f-43ab-b248-252cdf5eaeee'
+          ? 'erc20-balance:8453:0x0db510e79909666d6dec7f5e49370838c16d950f:5000000000000000000000'
+          : 'erc20-balance:8453:0x0db510e79909666d6dec7f5e49370838c16d950f:2000000000000000000000000'
+
+      let credential = credentials.get(credentialId)
+      if (!credential) {
+        credential = await credentials.add(credentialId)
+      }
+
+      if (!credential) {
+        throw new Error('No credential found')
+      }
+
+      const response = await sdk.submitAction({
         data,
         actionId,
+        proofs: [credential.proof],
       })
 
       if (!response.data?.success) {
@@ -61,7 +83,7 @@ export const usePerformAction = ({
       }
 
       setStatus({ status: 'success' })
-      onSuccess?.(response)
+      onSuccess?.(response.data)
     } catch (e) {
       console.error(e)
       setStatus({ status: 'error', error: 'Failed to perform action' })

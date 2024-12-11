@@ -2,16 +2,15 @@
 
 import '@rainbow-me/rainbowkit/styles.css'
 
-import { getDefaultConfig } from '@rainbow-me/rainbowkit'
+import { getDefaultConfig, RainbowKitProvider } from '@rainbow-me/rainbowkit'
 import { WagmiProvider } from 'wagmi'
 import { base } from 'wagmi/chains'
 import { QueryClientProvider, QueryClient } from '@tanstack/react-query'
 import { ThemeProvider } from 'next-themes'
-import { AuthProvider } from '@/lib/context/auth'
 import { SDKProvider } from '@anonworld/react'
 
 const config = getDefaultConfig({
-  appName: 'My RainbowKit App',
+  appName: 'anoncast',
   projectId: '302e299e8d6c292b6aeb9f313321e134',
   chains: [base],
   ssr: true,
@@ -31,7 +30,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
       <WagmiProvider config={config}>
         <QueryClientProvider client={queryClient}>
           <SDKProvider apiUrl={process.env.NEXT_PUBLIC_API_URL}>
-            <AuthProvider>{children}</AuthProvider>
+            <RainbowKitProvider>{children}</RainbowKitProvider>
           </SDKProvider>
         </QueryClientProvider>
       </WagmiProvider>

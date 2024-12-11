@@ -6,7 +6,6 @@ import { CircleMinusIcon } from 'lucide-react'
 import { CreatePost } from '../create-post'
 import { TOKEN_ADDRESS, POST_AMOUNT, PROMOTE_AMOUNT, DELETE_AMOUNT } from '@/lib/utils'
 import { useAccount } from 'wagmi'
-import { useAuth } from '@/lib/context/auth'
 
 export default function ActionComponent({
   variant = 'post',
@@ -19,7 +18,6 @@ export default function ActionComponent({
   description?: string
   requirements?: Array<{ amount: number; label: string }>
 }) {
-  const { siwe } = useAuth()
   const { address } = useAccount()
   const { data, isLoading } = useBalance()
 
@@ -64,12 +62,12 @@ export default function ActionComponent({
           ))}
         </ul>
       </AlertDescription>
-      {(!address || !siwe) && (
+      {!address && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded flex flex-row items-center justify-between gap-2">
           <p className="font-bold">{'You are not fully signed in. Sign in to post.'}</p>
         </div>
       )}
-      {address && siwe && !isLoading ? (
+      {address && !isLoading ? (
         FARCASTER_POST > BALANCE ? (
           <a
             href={`https://app.uniswap.org/swap?outputCurrency=${TOKEN_ADDRESS}&chain=base`}
