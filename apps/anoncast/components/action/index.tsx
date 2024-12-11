@@ -1,10 +1,10 @@
 import { useBalance } from '@/lib/hooks/use-balance'
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert'
-import { CircleCheckIcon } from 'lucide-react'
+import { CircleCheckIcon, ExternalLink } from 'lucide-react'
 import { CircleXIcon } from 'lucide-react'
 import { CircleMinusIcon } from 'lucide-react'
 import { CreatePost } from '../create-post'
-import { TOKEN_ADDRESS, POST_AMOUNT, PROMOTE_AMOUNT, DELETE_AMOUNT } from '@/lib/utils'
+import { POST_AMOUNT, PROMOTE_AMOUNT, DELETE_AMOUNT } from '@/lib/utils'
 import { useAccount } from 'wagmi'
 
 export default function ActionComponent({
@@ -131,14 +131,15 @@ export default function ActionComponent({
       {address && !isLoading ? (
         FARCASTER_POST > BALANCE ? (
           <a
-            href={`https://app.uniswap.org/swap?outputCurrency=${TOKEN_ADDRESS}&chain=base`}
+            href={`https://app.uniswap.org/swap?exactAmount=5000&exactField=output&inputCurrency=ETH&outputCurrency=0x0db510e79909666d6dec7f5e49370838c16d950f&chain=base`}
             target="_blank"
             rel="noreferrer"
           >
             <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded flex flex-row items-center justify-between gap-2">
-              <p className="font-bold">{`Not enough tokens to post. Buy ${
-                FARCASTER_POST - BALANCE
-              } more.`}</p>
+              <p className="font-bold flex flex-row items-center gap-2">
+                {`You need 5000 $ANON to post. Click here to buy.`}
+                <ExternalLink size={16} />
+              </p>
             </div>
           </a>
         ) : (
