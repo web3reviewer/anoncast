@@ -1,12 +1,12 @@
 'use client'
 
 import { useToast } from '@/lib/hooks/use-toast'
-import { Cast, Channel } from '@anonworld/sdk/types'
+import { Cast, Channel } from '@anonworld/react'
 import { useRouter } from 'next/navigation'
 import { createContext, useContext, useState, ReactNode } from 'react'
 import { hashMessage } from 'viem'
 import { CREATE_ACTION_ID } from '@/lib/utils'
-import { PerformActionStatus, usePerformAction } from '@/lib/hooks/use-perform-action'
+import { PerformActionStatus, usePerformAction } from '@anonworld/react'
 import sdk from '@farcaster/frame-sdk'
 
 interface CreatePostContextProps {

@@ -1,8 +1,5 @@
 import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
-import { AnonWorldSDK } from '@anonworld/sdk'
-
-export const sdk = new AnonWorldSDK(process.env.NEXT_PUBLIC_API_URL)
 
 export const DELETE_ACTION_ID = 'd4890070-d70f-4bfe-9c37-863ab9608205'
 export const PROMOTE_ACTION_ID = '083ca1d2-b661-4465-b025-3dd8a18532f6'

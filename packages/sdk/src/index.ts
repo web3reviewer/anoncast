@@ -5,7 +5,6 @@ import { getPublicKey } from './utils'
 import { LeanIMT } from '@zk-kit/lean-imt'
 import { pad } from 'viem'
 import { ApiResponse } from './types'
-import { hashMessage } from 'viem'
 
 type CreatePostData = {
   text?: string

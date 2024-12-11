@@ -1,6 +1,6 @@
 'use client'
 
-import { Cast } from '@anonworld/sdk/types'
+import { Cast } from '@anonworld/react'
 import { useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
 import AnimatedTabs from './animated-tabs'
@@ -8,13 +8,14 @@ import { Skeleton } from '../ui/skeleton'
 import { Post } from '../post'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { BEST_OF_FID, FID, LAUNCH_FID, sdk } from '@/lib/utils'
-
+import { BEST_OF_FID, FID, LAUNCH_FID } from '@/lib/utils'
+import { useSDK } from '@anonworld/react'
 export function PostFeed({
   defaultTab = 'trending',
 }: {
   defaultTab?: 'new' | 'trending'
 }) {
+  const { sdk } = useSDK()
   const [selected, setSelected] = useState<'new' | 'trending'>(defaultTab)
   const router = useRouter()
 
@@ -73,6 +74,7 @@ export function PromotedFeed({
 }: {
   defaultTab?: 'new' | 'promoted'
 }) {
+  const { sdk } = useSDK()
   const [selected, setSelected] = useState<'new' | 'promoted'>(defaultTab)
   const router = useRouter()
   const { data: promotedLaunches, isLoading: isPromotedLoading } = useQuery({

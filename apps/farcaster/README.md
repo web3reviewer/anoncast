@@ -1,3 +1,0 @@
-# anoncast
-
-https://anoncast.org

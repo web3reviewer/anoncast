@@ -21,11 +21,12 @@ import { Input } from '../ui/input'
 import { useQuery } from '@tanstack/react-query'
 import Confetti from 'confetti-react'
 import { Checkbox } from '../ui/checkbox'
-import { sdk } from '@/lib/utils'
+import { useSDK } from '@anonworld/react'
 
 const MAX_EMBEDS = 2
 
 export function CreatePost({ variant }: { variant: 'post' | 'launch' }) {
+  const { sdk } = useSDK()
   const {
     text,
     setText,
@@ -199,6 +200,7 @@ function TooltipButton({
 }
 
 function UploadImage() {
+  const { sdk } = useSDK()
   const { setImage, embedCount, image } = useCreatePost()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [loading, setLoading] = useState(false)
@@ -391,6 +393,7 @@ function RemoveableEmbed() {
 }
 
 function ParentCast() {
+  const { sdk } = useSDK()
   const { setParent, parent } = useCreatePost()
   const [open, setOpen] = useState(false)
   const [value, setValue] = useState('')
@@ -483,6 +486,7 @@ function RemoveableParent() {
 }
 
 function Channel() {
+  const { sdk } = useSDK()
   const { setChannel, channel } = useCreatePost()
   const [open, setOpen] = useState(false)
   const [value, setValue] = useState(channel?.id ?? '')
@@ -558,6 +562,7 @@ function Channel() {
 }
 
 function QuoteCast() {
+  const { sdk } = useSDK()
   const { setQuote, embedCount, quote, setEmbed } = useCreatePost()
   const [open, setOpen] = useState(false)
   const [value, setValue] = useState('')

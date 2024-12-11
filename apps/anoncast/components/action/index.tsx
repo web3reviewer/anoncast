@@ -180,7 +180,7 @@ function TokenRequirement({
         <CircleMinusIcon className="text-gray-400 w-4 h-4" />
       )}
       <p>
-        {oldTokenNeeded && (
+        {!!oldTokenNeeded && (
           <>
             <span className="line-through text-zinc-500">{`${oldTokenNeeded.toLocaleString()}`}</span>
             <span>{'  '}</span>

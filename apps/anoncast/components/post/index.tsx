@@ -1,6 +1,6 @@
 'use client'
 
-import { Cast, Reveal } from '@anonworld/sdk/types'
+import { Cast, Reveal } from '@anonworld/react'
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -32,8 +32,7 @@ import { useRouter } from 'next/navigation'
 import { formatEther, hashMessage } from 'viem'
 import { Input } from '../ui/input'
 import { useQuery } from '@tanstack/react-query'
-import { sdk } from '@/lib/utils'
-import { usePerformAction } from '@/lib/hooks/use-perform-action'
+import { usePerformAction, useSDK } from '@anonworld/react'
 import { ToastAction } from '@radix-ui/react-toast'
 
 function formatNumber(num: number): string {
@@ -558,6 +557,7 @@ function RevealButton({
   cast,
   onReveal,
 }: { cast: Cast; onReveal: (reveal: Reveal) => void }) {
+  const { sdk } = useSDK()
   const [open, setOpen] = useState(false)
   const { toast } = useToast()
   const [value, setValue] = useState('')
@@ -645,6 +645,7 @@ function RevealButton({
 }
 
 function RevealBadge({ reveal }: { reveal: Reveal }) {
+  const { sdk } = useSDK()
   const { data } = useQuery({
     queryKey: ['identity', reveal.address],
     queryFn: () => sdk.getFarcasterIdentity(reveal.address!),

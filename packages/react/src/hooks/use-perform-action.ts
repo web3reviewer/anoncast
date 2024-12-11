@@ -1,9 +1,10 @@
 import { useState } from 'react'
-import { useAccount } from 'wagmi'
-import { sdk } from '@/lib/utils'
 import { PerformActionArgs, PerformActionResponse } from '@anonworld/sdk'
 import { hashMessage } from 'viem'
-import { useAuth } from '../context/auth'
+import { useSDK } from '../sdk'
+import { useAccount } from 'wagmi'
+
+const STORAGE_KEY = 'auth:v0'
 
 export type PerformActionStatus =
   | {
@@ -21,15 +22,26 @@ export const usePerformAction = ({
   onSuccess?: (response: PerformActionResponse) => void
   onError?: (error: string) => void
 } = {}) => {
+  const { sdk } = useSDK()
   const [status, setStatus] = useState<PerformActionStatus>({ status: 'idle' })
   const { address } = useAccount()
-  const { siwe } = useAuth()
+
+  const getSiwe = () => {
+    const item = localStorage.getItem(STORAGE_KEY)
+    if (item) {
+      const payload = JSON.parse(item)
+      return payload
+    }
+    return undefined
+  }
 
   const performAction = async (actionId: string, data: PerformActionArgs['data']) => {
     try {
       if (!address) {
         throw new Error('Not connected')
       }
+
+      const siwe = getSiwe()
       if (!siwe) {
         throw new Error('Not signed in')
       }
