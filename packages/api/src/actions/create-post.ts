@@ -27,6 +27,17 @@ export class CreatePostAction {
   async execute() {
     const { text, embeds, quote, channel, parent, revealHash } = this.data
 
+    const bannedWords = ['nigger', 'n1gg3r', 'nigga', 'n1gga', 'n1gger', 'n1gga']
+
+    if (
+      text &&
+      bannedWords.some((word) => text.toLowerCase().includes(word.toLowerCase()))
+    ) {
+      return {
+        success: false,
+      }
+    }
+
     const response = await neynar.createCast({
       fid: this.metadata.fid,
       text,
