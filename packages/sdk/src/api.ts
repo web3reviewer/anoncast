@@ -1,4 +1,3 @@
-import { ProofData } from '@anonworld/zk'
 import {
   ApiResponse,
   Cast,
@@ -72,30 +71,26 @@ export class Api {
     }
   }
 
-  async submitAction({
-    proofs,
-    actionId,
-    data,
-  }: {
-    proofs: {
-      proof: number[]
-      publicInputs: string[]
+  async submitAction(action: {
+    credentials: {
+      id: string
+      proof: {
+        proof: number[]
+        publicInputs: string[]
+      }
     }[]
     actionId: string
     data: any
   }) {
-    return await this.request<{ success: boolean; hash?: string; tweetId?: string }>(
-      '/actions/submit',
-      {
-        method: 'POST',
-        body: JSON.stringify({
-          actionId,
-          data,
-          proofs,
-        }),
-        maxRetries: 3,
-      }
-    )
+    return await this.request<{
+      results: { success: boolean; hash?: string; tweetId?: string }[]
+    }>('/actions/submit', {
+      method: 'POST',
+      body: JSON.stringify({
+        actions: [action],
+      }),
+      maxRetries: 3,
+    })
   }
 
   async getMerkleTreeForCredential(credentialId: string) {

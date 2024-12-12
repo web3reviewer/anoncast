@@ -1,5 +1,4 @@
 import {
-  Action,
   createPost,
   createPostRelationship,
   getPost,
@@ -8,6 +7,7 @@ import {
 import { neynar } from '../services/neynar'
 import { twitter } from '../services/twitter'
 import { Cast } from '../services/neynar/types'
+import { BaseAction } from './base'
 
 export type PromotePostActionMetadata = {
   fid: number
@@ -19,17 +19,12 @@ export type PromotePostActionData = {
   reply?: boolean
 }
 
-export class PromotePostAction {
-  private metadata: PromotePostActionMetadata
-  private data: PromotePostActionData
-
-  constructor(action: Action, data: any) {
-    this.metadata = action.metadata as PromotePostActionMetadata
-    this.data = data
-  }
-
+export class PromotePostAction extends BaseAction<
+  PromotePostActionMetadata,
+  PromotePostActionData
+> {
   async isAbleToPromote(cast: Cast) {
-    if (!this.metadata.twitter) return true
+    if (!this.action.metadata.twitter) return true
 
     const unableToPromoteRegex = [
       /.*@clanker.*launch.*/i,
@@ -81,7 +76,7 @@ export class PromotePostAction {
     }
 
     const response = await neynar.createCast({
-      fid: this.metadata.fid,
+      fid: this.action.metadata.fid,
       text: cast.text,
       embeds,
       quote: quoteHash,
@@ -96,7 +91,7 @@ export class PromotePostAction {
 
     await createPost({
       hash: response.cast.hash,
-      fid: this.metadata.fid,
+      fid: this.action.metadata.fid,
       data: post.data,
       reveal_hash: post.reveal_hash,
     })
@@ -104,7 +99,7 @@ export class PromotePostAction {
     await createPostRelationship({
       post_hash: this.data.hash,
       target: 'farcaster',
-      target_account: this.metadata.fid.toString(),
+      target_account: this.action.metadata.fid.toString(),
       target_id: response.cast.hash,
     })
 
@@ -112,7 +107,7 @@ export class PromotePostAction {
   }
 
   async promoteToTwitter(cast: Cast) {
-    if (cast.text.includes('@bankr') || !this.metadata.twitter) return
+    if (cast.text.includes('@bankr') || !this.action.metadata.twitter) return
 
     let text = cast.text
     const usedUrls = new Set<string>()
@@ -168,7 +163,7 @@ export class PromotePostAction {
       }
     }
 
-    const response = await twitter.postTweet(this.metadata.twitter, {
+    const response = await twitter.postTweet(this.action.metadata.twitter, {
       text,
       images,
       quoteTweetId,
@@ -180,21 +175,21 @@ export class PromotePostAction {
     await createPostRelationship({
       post_hash: cast.hash,
       target: 'twitter',
-      target_account: this.metadata.twitter,
+      target_account: this.action.metadata.twitter,
       target_id: response.tweetId,
     })
 
     await createPostRelationship({
       post_hash: this.data.hash,
       target: 'twitter',
-      target_account: this.metadata.twitter,
+      target_account: this.action.metadata.twitter,
       target_id: response.tweetId,
     })
 
     return response.tweetId
   }
 
-  async execute() {
+  async handle() {
     const cast = await neynar.getCast(this.data.hash)
     if (!cast) {
       return { success: false }
@@ -207,16 +202,17 @@ export class PromotePostAction {
     const children = await getPostChildren([this.data.hash])
 
     const promoteToFarcaster =
-      this.metadata.fid &&
+      this.action.metadata.fid &&
       !children.some(
         (r) =>
-          r.target === 'farcaster' && r.target_account === this.metadata.fid?.toString()
+          r.target === 'farcaster' &&
+          r.target_account === this.action.metadata.fid?.toString()
       )
 
     const promoteToTwitter =
-      this.metadata.twitter &&
+      this.action.metadata.twitter &&
       !children.some(
-        (r) => r.target === 'twitter' && r.target_account === this.metadata.twitter
+        (r) => r.target === 'twitter' && r.target_account === this.action.metadata.twitter
       )
 
     let hash: string | undefined

@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { useSDK } from '../sdk'
 import { useAccount } from 'wagmi'
-import { useCredentials } from './use-credentials'
 
 export type PerformActionStatus =
   | {
@@ -75,15 +74,15 @@ export const usePerformAction = ({
       const response = await sdk.submitAction({
         data,
         actionId,
-        proofs: [credential.proof],
+        credentials: [credential],
       })
 
-      if (!response.data?.success) {
+      if (!response.data?.results[0].success) {
         throw new Error('Failed to perform action')
       }
 
       setStatus({ status: 'success' })
-      onSuccess?.(response.data)
+      onSuccess?.(response.data.results[0])
     } catch (e) {
       console.error(e)
       setStatus({ status: 'error', error: 'Failed to perform action' })
