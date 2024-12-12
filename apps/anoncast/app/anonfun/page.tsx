@@ -2,8 +2,8 @@
 
 import ActionComponent from '@/components/action'
 import { PostFeed, PromotedFeed } from '@/components/post-feed'
-import AnimatedTabs from '@/components/post-feed/animated-tabs'
 import { CreatePostProvider, useCreatePost } from '@/components/create-post/context'
+import { NavTabs } from '@/components/nav-tabs'
 
 export default function Home() {
   return (
@@ -14,16 +14,11 @@ export default function Home() {
 }
 
 function Inner() {
-  const { variant, setVariant } = useCreatePost()
+  const { variant } = useCreatePost()
   return (
     <div className="flex flex-col gap-8">
       <div className="flex flex-col gap-4">
-        <AnimatedTabs
-          tabs={['anoncast', { id: 'anonfun', badge: 'NEW' }]}
-          activeTab={variant}
-          onTabChange={(tab) => setVariant(tab as 'anoncast' | 'anonfun')}
-          layoutId="main-tabs"
-        />
+        <NavTabs />
 
         {variant === 'anoncast' ? (
           <ActionComponent variant="post" />

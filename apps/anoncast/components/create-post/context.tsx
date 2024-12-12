@@ -9,6 +9,8 @@ import { ToastAction } from '../ui/toast'
 import { CREATE_ACTION_ID } from '@/lib/utils'
 import { PerformActionStatus, usePerformAction } from '@anonworld/react'
 
+type Variant = 'anoncast' | 'anonfun' | 'anon'
+
 interface CreatePostContextProps {
   text: string | null
   setText: (text: string) => void
@@ -29,8 +31,8 @@ interface CreatePostContextProps {
   setConfetti: (confetti: boolean) => void
   revealPhrase: string | null
   setRevealPhrase: (revealPhrase: string | null) => void
-  variant: 'anoncast' | 'anonfun'
-  setVariant: (variant: 'anoncast' | 'anonfun') => void
+  variant: Variant
+  setVariant: (variant: Variant) => void
 }
 
 const CreatePostContext = createContext<CreatePostContextProps | undefined>(undefined)
@@ -40,7 +42,7 @@ export const CreatePostProvider = ({
   children,
 }: {
   children: ReactNode
-  initialVariant?: 'anoncast' | 'anonfun'
+  initialVariant?: Variant
 }) => {
   const [text, setText] = useState<string | null>(null)
   const [image, setImage] = useState<string | null>(null)
@@ -51,9 +53,7 @@ export const CreatePostProvider = ({
   const [revealPhrase, setRevealPhrase] = useState<string | null>(null)
   const [confetti, setConfetti] = useState(false)
   const { toast } = useToast()
-  const [variant, setVariant] = useState<'anoncast' | 'anonfun'>(
-    initialVariant || 'anoncast'
-  )
+  const [variant, setVariant] = useState<Variant>(initialVariant || 'anoncast')
   const router = useRouter()
   const { performAction, status } = usePerformAction({
     onSuccess: (response) => {
@@ -110,9 +110,9 @@ export const CreatePostProvider = ({
 
   const embedCount = [image, embed, quote].filter((e) => e !== null).length
 
-  const handleSetVariant = (variant: 'anoncast' | 'anonfun') => {
+  const handleSetVariant = (variant: Variant) => {
     setVariant(variant)
-    router.push(variant === 'anoncast' ? '/' : '/anonfun')
+    router.push(`/${variant}`)
   }
 
   return (

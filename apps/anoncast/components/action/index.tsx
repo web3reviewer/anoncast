@@ -96,37 +96,6 @@ export default function ActionComponent({
             Github
           </a>
         </div>
-        <div className="flex flex-row gap-4 justify-end">
-          <a
-            href="https://app.interface.social/token/8453/0x0db510e79909666d6dec7f5e49370838c16d950f"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-sm decoration-dotted underline font-medium"
-          >
-            <span className="hidden sm:inline">Interface</span>
-            <img
-              src="/farcaster.svg"
-              alt="Farcaster"
-              className="w-4 h-4 sm:hidden invert"
-            />
-          </a>
-          <a
-            href="https://dexscreener.com/base/0xc4ecaf115cbce3985748c58dccfc4722fef8247c"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-sm decoration-dotted underline font-medium"
-          >
-            DEX Screener
-          </a>
-          <a
-            href="https://app.uniswap.org/swap?outputCurrency=0x0Db510e79909666d6dEc7f5e49370838c16D950f&chain=base"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-sm decoration-dotted underline font-medium"
-          >
-            Uniswap
-          </a>
-        </div>
       </div>
       {address && !isLoading ? (
         FARCASTER_POST > BALANCE ? (
