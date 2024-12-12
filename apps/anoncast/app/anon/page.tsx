@@ -83,11 +83,7 @@ function BuyBurn() {
     args: [CONTRACT_ADDRESS],
   })
 
-  const {
-    data: lastSwap,
-    refetch: refetchLastSwap,
-    isLoading: isLoadingLastSwap,
-  } = useReadContract({
+  const { data: lastSwap, refetch: refetchLastSwap } = useReadContract({
     address: CONTRACT_ADDRESS,
     abi: [parseAbiItem('function getLastSwapTimestamp() external view returns (uint40)')],
     functionName: 'getLastSwapTimestamp',
