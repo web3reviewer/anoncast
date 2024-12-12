@@ -72,7 +72,7 @@ function BuyBurn() {
     useWaitForTransactionReceipt({
       hash,
     })
-  const [timeSinceLastSwap, setTimeSinceLastSwap] = useState(-1)
+  const [timeSinceLastBurn, setTimeSinceLastBurn] = useState(-1)
 
   const CONTRACT_ADDRESS: `0x${string}` = '0xC70671a8546CF3263B57f817a1c74f697da820C8'
 
@@ -83,7 +83,7 @@ function BuyBurn() {
     args: [CONTRACT_ADDRESS],
   })
 
-  const { data: lastSwap, refetch: refetchLastSwap } = useReadContract({
+  const { data: lastBurn, refetch: refetchLastBurn } = useReadContract({
     address: CONTRACT_ADDRESS,
     abi: [parseAbiItem('function getLastSwapTimestamp() external view returns (uint40)')],
     functionName: 'getLastSwapTimestamp',
@@ -99,22 +99,22 @@ function BuyBurn() {
 
   useEffect(() => {
     if (isConfirmed) {
-      setTimeSinceLastSwap(-1)
+      setTimeSinceLastBurn(-1)
       refetch()
-      refetchLastSwap()
+      refetchLastBurn()
     }
-  }, [isConfirmed, refetch, refetchLastSwap])
+  }, [isConfirmed, refetch, refetchLastBurn])
 
   useEffect(() => {
     const timer = setInterval(() => {
-      if (lastSwap) {
-        const newSeconds = Math.floor((Date.now() - Number(lastSwap) * 1000) / 1000)
-        setTimeSinceLastSwap(newSeconds)
+      if (lastBurn) {
+        const newSeconds = Math.floor((Date.now() - Number(lastBurn) * 1000) / 1000)
+        setTimeSinceLastBurn(newSeconds)
       }
     }, 1000)
 
     return () => clearInterval(timer)
-  }, [lastSwap])
+  }, [lastBurn])
 
   function formatTimeAgo(seconds: number): string {
     if (seconds < 60) return `${seconds}s ago`
@@ -125,42 +125,43 @@ function BuyBurn() {
 
   return (
     <div className="flex flex-col gap-2 mt-4">
-      <span className="font-bold text-md">Swap and Burn</span>
+      <span className="font-bold text-md">Burn $ANON</span>
       <p className="text-sm text-zinc-400">
-        Swap and burn the rewards earned by @anonfun from clanker-deployed tokens.
-        Callable by anyone, at most once per minute.
+        Buy $ANON, using the ETH rewards earned by @anonfun, and burn it. Callable by
+        anyone, at most once per minute, 0.1 ETH at a time.
       </p>
+      <p className="text-sm text-zinc-400">You only pay for the gas fees.</p>
       <div className="flex flex-row justify-between mt-2">
         <p className="text-sm ">
           Burnable:{' '}
           {data ? `${Number.parseFloat(formatUnits(data, 18)).toFixed(4)} ETH` : '0 ETH'}
         </p>
         <p className="text-sm text-zinc-400">
-          {lastSwap && timeSinceLastSwap !== -1
-            ? `Last swap: ${formatTimeAgo(timeSinceLastSwap)}`
+          {lastBurn && timeSinceLastBurn !== -1
+            ? `Last burn: ${formatTimeAgo(timeSinceLastBurn)}`
             : ''}
         </p>
       </div>
       <Button
         onClick={handleClick}
-        disabled={isConfirming || timeSinceLastSwap < 60 || timeSinceLastSwap === -1}
+        disabled={isConfirming || timeSinceLastBurn < 60 || timeSinceLastBurn === -1}
       >
         {isConfirming ? (
           <div className="flex flex-row items-center gap-2">
             <Loader2 className="animate-spin" />
             <p>Burning...</p>
           </div>
-        ) : timeSinceLastSwap === -1 ? (
+        ) : timeSinceLastBurn === -1 ? (
           <Loader2 className="animate-spin" />
-        ) : timeSinceLastSwap < 60 ? (
-          `Wait ${60 - timeSinceLastSwap} seconds`
+        ) : timeSinceLastBurn < 60 ? (
+          `Wait ${60 - timeSinceLastBurn} seconds`
         ) : isConfirmed ? (
           <div className="flex flex-row items-center gap-2">
             <Check />
             <p>Burned</p>
           </div>
         ) : (
-          'Swap and Burn'
+          'Burn $ANON'
         )}
       </Button>
       {error && <p className="text-sm text-red-500">{error.message}</p>}
