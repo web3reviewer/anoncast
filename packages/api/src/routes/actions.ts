@@ -68,9 +68,9 @@ export const actionsRoutes = createElysia({ prefix: '/actions' })
           const response = await actionInstance.execute()
           results.push(response)
 
-          const nextActions = await actionInstance.next()
-          if (nextActions.length > 0) {
-            nextActions.push(...nextActions)
+          const next = await actionInstance.next()
+          if (next.length > 0) {
+            nextActions.push(...next)
           }
         } catch (error) {
           results.push({ success: false, error: (error as Error).message })
