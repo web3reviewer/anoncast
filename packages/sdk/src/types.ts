@@ -548,3 +548,49 @@ export type Credential = {
     minBalance: string
   }
 }
+
+export type CreatePostActionData = {
+  text?: string
+  embeds?: string[]
+  images?: string[]
+  quote?: string
+  channel?: string
+  parent?: string
+  revealHash?: string
+}
+
+export type DeletePostFarcasterActionData = {
+  hash: string
+}
+
+export type DeletePostTwitterActionData = {
+  tweetId: string
+}
+
+export type CopyPostFarcasterActionData = {
+  hash: string
+}
+
+export type CopyPostTwitterActionData = {
+  hash: string
+  reply?: boolean
+}
+
+export type PerformActionData =
+  | CreatePostActionData
+  | DeletePostFarcasterActionData
+  | DeletePostTwitterActionData
+  | CopyPostFarcasterActionData
+  | CopyPostTwitterActionData
+
+export type PerformAction = {
+  credentials: {
+    id: string
+    proof: {
+      proof: number[]
+      publicInputs: string[]
+    }
+  }[]
+  actionId: string
+  data: PerformActionData
+}

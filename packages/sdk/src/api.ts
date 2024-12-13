@@ -3,6 +3,7 @@ import {
   Cast,
   Channel,
   Identity,
+  PerformAction,
   RequestConfig,
   UploadImageResponse,
 } from './types'
@@ -71,23 +72,13 @@ export class Api {
     }
   }
 
-  async submitAction(action: {
-    credentials: {
-      id: string
-      proof: {
-        proof: number[]
-        publicInputs: string[]
-      }
-    }[]
-    actionId: string
-    data: any
-  }) {
+  async executeActions(actions: PerformAction[]) {
     return await this.request<{
       results: { success: boolean; hash?: string; tweetId?: string }[]
-    }>('/actions/submit', {
+    }>('/actions/execute', {
       method: 'POST',
       body: JSON.stringify({
-        actions: [action],
+        actions,
       }),
       maxRetries: 3,
     })

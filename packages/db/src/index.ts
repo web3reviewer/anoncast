@@ -17,6 +17,18 @@ export type Credential = typeof credentialsTable.$inferSelect
 export type Action<T = unknown> = typeof actionsTable.$inferSelect & {
   metadata: T
 }
+export type Post = typeof postsTable.$inferSelect & {
+  data: PostData
+}
+
+export type PostData = {
+  text?: string
+  embeds?: string[]
+  images?: string[]
+  quote?: string
+  channel?: string
+  parent?: string
+}
 
 export const db = drizzle(process.env.DATABASE_URL as string)
 
@@ -55,12 +67,13 @@ export const deletePost = async (hash: string) => {
     .where(eq(postsTable.hash, hash))
 }
 
-export const getPost = async (hash: string) => {
+export const getPost = async (hash: string): Promise<Post | null> => {
   const [post] = await db
     .select()
     .from(postsTable)
     .where(and(eq(postsTable.hash, hash), isNull(postsTable.deleted_at)))
-  return post
+    .limit(1)
+  return post as Post | null
 }
 
 export const getBulkPosts = async (hashes: string[]) => {
@@ -86,7 +99,12 @@ export const getPostParentAndSiblings = async (hashes: string[]) => {
   const parents = await db
     .select()
     .from(postRelationshipsTable)
-    .where(inArray(postRelationshipsTable.target_id, hashes))
+    .where(
+      and(
+        inArray(postRelationshipsTable.target_id, hashes),
+        isNull(postRelationshipsTable.deleted_at)
+      )
+    )
   const children = await getPostChildren(parents.map((p) => p.post_hash))
 
   const result: Record<
@@ -148,26 +166,34 @@ export const createPostRelationship = async (
     })
 }
 
-export const deletePostRelationships = async (hash: string) => {
-  await db
-    .update(postRelationshipsTable)
-    .set({ deleted_at: new Date(), updated_at: new Date() })
-    .where(eq(postRelationshipsTable.post_hash, hash))
+export const getPostRelationship = async (
+  postHash: string,
+  target: string,
+  targetAccount: string
+) => {
+  const [relationship] = await db
+    .select()
+    .from(postRelationshipsTable)
+    .where(
+      and(
+        eq(postRelationshipsTable.post_hash, postHash),
+        eq(postRelationshipsTable.target, target),
+        eq(postRelationshipsTable.target_account, targetAccount),
+        isNull(postRelationshipsTable.deleted_at)
+      )
+    )
+    .limit(1)
+  return relationship
 }
 
-export const deletePostRelationship = async (params: {
-  post_hash: string
-  target: string
-  target_account: string
-}) => {
+export const deletePostRelationship = async (target: string, targetId: string) => {
   await db
     .update(postRelationshipsTable)
     .set({ deleted_at: new Date(), updated_at: new Date() })
     .where(
       and(
-        eq(postRelationshipsTable.post_hash, params.post_hash),
-        eq(postRelationshipsTable.target, params.target),
-        eq(postRelationshipsTable.target_account, params.target_account)
+        eq(postRelationshipsTable.target_id, targetId),
+        eq(postRelationshipsTable.target, target)
       )
     )
 }

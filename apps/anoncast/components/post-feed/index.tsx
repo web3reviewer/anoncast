@@ -32,7 +32,7 @@ export function PostFeed({
     queryFn: async (): Promise<Cast[]> => {
       const response = await sdk.getNewFeed(FID)
       return (response?.data?.data || [])?.filter(
-        ({ text }) => !text.toLowerCase().match(/.*@clanker.*(launch|deploy).*/)
+        ({ text }) => !text.toLowerCase().match(/.*@clanker.*(launch|deploy|make).*/)
       )
     },
   })
@@ -90,7 +90,7 @@ export function PromotedFeed({
     queryFn: async (): Promise<Cast[]> => {
       const response = await sdk.getNewFeed(FID)
       return (response?.data?.data || [])?.filter(({ text }) =>
-        text.toLowerCase().match(/.*@clanker.*(launch|deploy).*/)
+        text.toLowerCase().match(/.*@clanker.*(launch|deploy|make).*/)
       )
     },
   })

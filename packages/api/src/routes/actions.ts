@@ -1,15 +1,19 @@
 import { createElysia } from '../utils'
 import { t } from 'elysia'
 import { getAction } from '@anonworld/db'
-import { CreatePostAction } from '../actions/create-post'
-import { DeletePostAction } from '../actions/delete-post'
-import { PromotePostAction } from '../actions/promote-post'
+import { CreatePost } from '../actions/create-post'
+import { CopyPostFarcaster } from '../actions/copy-post-farcaster'
+import { CopyPostTwitter } from '../actions/copy-post-twitter'
+import { DeletePostTwitter } from '../actions/delete-post-twitter'
+import { DeletePostFarcaster } from '../actions/delete-post-farcaster'
 import { BaseAction } from '../actions/base'
 
 enum ActionType {
   CREATE_POST = 'CREATE_POST',
-  DELETE_POST = 'DELETE_POST',
-  PROMOTE_POST = 'PROMOTE_POST',
+  COPY_POST_TWITTER = 'COPY_POST_TWITTER',
+  COPY_POST_FARCASTER = 'COPY_POST_FARCASTER',
+  DELETE_POST_TWITTER = 'DELETE_POST_TWITTER',
+  DELETE_POST_FARCASTER = 'DELETE_POST_FARCASTER',
 }
 
 async function getActionInstance(request: {
@@ -29,15 +33,23 @@ async function getActionInstance(request: {
 
   switch (action.type) {
     case ActionType.CREATE_POST: {
-      actionInstance = new CreatePostAction(action, request.data, request.credentials)
+      actionInstance = new CreatePost(action, request.data, request.credentials)
       break
     }
-    case ActionType.DELETE_POST: {
-      actionInstance = new DeletePostAction(action, request.data, request.credentials)
+    case ActionType.COPY_POST_TWITTER: {
+      actionInstance = new CopyPostTwitter(action, request.data, request.credentials)
       break
     }
-    case ActionType.PROMOTE_POST: {
-      actionInstance = new PromotePostAction(action, request.data, request.credentials)
+    case ActionType.COPY_POST_FARCASTER: {
+      actionInstance = new CopyPostFarcaster(action, request.data, request.credentials)
+      break
+    }
+    case ActionType.DELETE_POST_TWITTER: {
+      actionInstance = new DeletePostTwitter(action, request.data, request.credentials)
+      break
+    }
+    case ActionType.DELETE_POST_FARCASTER: {
+      actionInstance = new DeletePostFarcaster(action, request.data, request.credentials)
       break
     }
   }
@@ -46,7 +58,7 @@ async function getActionInstance(request: {
 }
 
 export const actionsRoutes = createElysia({ prefix: '/actions' }).post(
-  '/submit',
+  '/execute',
   async ({ body }) => {
     const results = []
     for (const action of body.actions) {

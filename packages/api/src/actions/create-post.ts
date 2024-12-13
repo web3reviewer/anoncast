@@ -1,4 +1,4 @@
-import { createPost as createPostDb, createPostCredentials } from '@anonworld/db'
+import { createPost, createPostCredentials, PostData } from '@anonworld/db'
 import { neynar } from '../services/neynar'
 import { BaseAction } from './base'
 
@@ -17,24 +17,16 @@ const INVALID_REGEXES = [
   /\b[cĆćĈĉČčĊċÇçḈḉȻȼꞒꞓꟄꞔƇƈɕ]+[hĤĥȞȟḦḧḢḣḨḩḤḥḪḫH̱ẖĦħⱧⱨꞪɦꞕΗНн]+[iÍíi̇́Ììi̇̀ĬĭÎîǏǐÏïḮḯĨĩi̇̃ĮįĮ́į̇́Į̃į̇̃ĪīĪ̀ī̀ỈỉȈȉI̋i̋ȊȋỊịꞼꞽḬḭƗɨᶖİiIıＩｉ1lĺľļḷḹl̃ḽḻłŀƚꝉⱡɫɬꞎꬷꬸꬹᶅɭȴＬｌ]+[nŃńǸǹŇňÑñṄṅŅņṆṇṊṋṈṉN̈n̈ƝɲŊŋꞐꞑꞤꞥᵰᶇɳȵꬻꬼИиПпＮｎ]+[kḰḱǨǩĶķḲḳḴḵƘƙⱩⱪᶄꝀꝁꝂꝃꝄꝅꞢꞣ]+[sŚśṤṥŜŝŠšṦṧṠṡŞşṢṣṨṩȘșS̩s̩ꞨꞩⱾȿꟅʂᶊᵴ]*\b/,
 ]
 
-export type CreatePostActionMetadata = {
+export type CreatePostMetadata = {
   fid: number
 }
 
-export type CreatePostActionData = {
-  text?: string
-  embeds?: string[]
-  quote?: string
-  channel?: string
-  parent?: string
+export type CreatePostData = PostData & {
   revealHash?: string
   roots: string[]
 }
 
-export class CreatePostAction extends BaseAction<
-  CreatePostActionMetadata,
-  CreatePostActionData
-> {
+export class CreatePost extends BaseAction<CreatePostMetadata, CreatePostData> {
   async handle() {
     const { text, embeds, quote, channel, parent, revealHash } = this.data
 
@@ -58,7 +50,7 @@ export class CreatePostAction extends BaseAction<
       throw new Error('Failed to create cast')
     }
 
-    await createPostDb({
+    await createPost({
       hash: response.cast.hash,
       fid: this.action.metadata.fid,
       data: { ...this.data, revealHash: undefined },

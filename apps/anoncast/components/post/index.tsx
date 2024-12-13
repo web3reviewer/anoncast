@@ -24,15 +24,17 @@ import {
   PROMOTE_AMOUNT,
   LAUNCH_AMOUNT,
   LAUNCH_FID,
-  DELETE_ACTION_ID,
-  PROMOTE_ACTION_ID,
-  LAUNCH_ACTION_ID,
+  COPY_TO_ANONFUN_ACTION_ID,
+  DELETE_FROM_ANONCAST_ACTION_ID,
+  DELETE_FROM_TWITTER_ACTION_ID,
+  COPY_TO_ANONCAST_ACTION_ID,
+  COPY_TO_TWITTER_ACTION_ID,
 } from '@/lib/utils'
 import { useRouter } from 'next/navigation'
 import { formatEther, hashMessage } from 'viem'
 import { Input } from '../ui/input'
 import { useQuery } from '@tanstack/react-query'
-import { usePerformAction, useSDK } from '@anonworld/react'
+import { useExecuteActions, useSDK } from '@anonworld/react'
 import { ToastAction } from '@radix-ui/react-toast'
 
 function formatNumber(num: number): string {
@@ -58,11 +60,14 @@ export function Post({
   const twitterChild = cast.children.find((child) => child.target === 'twitter')
   const tweetId = twitterSibling?.targetId || twitterChild?.targetId
 
+  const farcasterChild = cast.children.find((child) => child.target === 'farcaster')
+  const farcasterHash = farcasterChild?.targetId || cast.hash
+
   const launchChild = cast.children.find(
     (child) => child.target === 'farcaster' && Number(child.targetAccount) === LAUNCH_FID
   )
   const unableToPromoteRegex = [
-    /.*@clanker.*(launch|deploy).*/i,
+    /.*@clanker.*(launch|deploy|make).*/i,
     /.*dexscreener.com.*/i,
     /.*dextools.io.*/i,
     /.*0x[a-fA-F0-9]{40}.*/i,
@@ -94,7 +99,7 @@ export function Post({
     balance >= BigInt(LAUNCH_AMOUNT) &&
     !launchChild &&
     variant === 'anonfun' &&
-    cast.text.match(/.*clanker.*(launch|deploy).*/)
+    cast.text.match(/.*clanker.*(launch|deploy|make).*/)
 
   const canReveal = address && !!cast.reveal && !cast.reveal?.phrase
 
@@ -168,7 +173,7 @@ export function Post({
               onClick={(e) => e.stopPropagation()}
             >
               <a
-                href={`https://warpcast.com/~/conversations/${cast.hash}`}
+                href={`https://warpcast.com/~/conversations/${farcasterHash}`}
                 target="_blank"
                 rel="noreferrer"
               >
@@ -331,7 +336,7 @@ function timeAgo(timestamp: string): string {
 function DeleteButton({ cast }: { cast: Cast }) {
   const [open, setOpen] = useState(false)
   const { toast } = useToast()
-  const { performAction, status } = usePerformAction({
+  const { executeActions: performAction, status } = useExecuteActions({
     onSuccess: () => {
       toast({
         title: 'Post deleted',
@@ -347,9 +352,29 @@ function DeleteButton({ cast }: { cast: Cast }) {
   })
 
   const handleDelete = async () => {
-    await performAction(DELETE_ACTION_ID, {
-      hash: cast.hash,
-    })
+    const actions = []
+    const farcasterChild = cast.children.find((c) => c.target === 'farcaster')
+    if (farcasterChild) {
+      actions.push({
+        actionId: DELETE_FROM_ANONCAST_ACTION_ID,
+        data: {
+          hash: farcasterChild.targetId,
+        },
+      })
+    }
+    const twitterChild = cast.children.find((c) => c.target === 'twitter')
+    if (twitterChild) {
+      actions.push({
+        actionId: DELETE_FROM_TWITTER_ACTION_ID,
+        data: {
+          tweetId: twitterChild.targetId,
+        },
+      })
+    }
+
+    if (actions.length > 0) {
+      await performAction(actions)
+    }
     setOpen(false)
   }
 
@@ -393,7 +418,7 @@ function PromoteButton({ cast }: { cast: Cast }) {
   const [open, setOpen] = useState(false)
   const [asReply, setAsReply] = useState(false)
   const { toast } = useToast()
-  const { performAction, status } = usePerformAction({
+  const { executeActions: performAction, status } = useExecuteActions({
     onSuccess: (response) => {
       toast({
         title: 'Post promoted',
@@ -401,7 +426,8 @@ function PromoteButton({ cast }: { cast: Cast }) {
           <ToastAction
             altText="View post"
             onClick={() => {
-              window.open(`https://x.com/i/status/${response.tweetId}`, '_blank')
+              const tweetId = response.find((r) => r.tweetId)?.tweetId
+              window.open(`https://x.com/i/status/${tweetId}`, '_blank')
             }}
           >
             View on X
@@ -419,10 +445,21 @@ function PromoteButton({ cast }: { cast: Cast }) {
   })
 
   const handlePromote = async () => {
-    await performAction(PROMOTE_ACTION_ID, {
-      hash: cast.hash,
-      reply: asReply,
-    })
+    await performAction([
+      {
+        actionId: COPY_TO_ANONCAST_ACTION_ID,
+        data: {
+          hash: cast.hash,
+        },
+      },
+      {
+        actionId: COPY_TO_TWITTER_ACTION_ID,
+        data: {
+          hash: cast.hash,
+          reply: asReply,
+        },
+      },
+    ])
     setOpen(false)
   }
 
@@ -483,7 +520,7 @@ function PromoteButton({ cast }: { cast: Cast }) {
 function LaunchButton({ cast }: { cast: Cast }) {
   const [open, setOpen] = useState(false)
   const { toast } = useToast()
-  const { performAction, status } = usePerformAction({
+  const { executeActions: performAction, status } = useExecuteActions({
     onSuccess: (response) => {
       toast({
         title: 'Post launched',
@@ -491,10 +528,8 @@ function LaunchButton({ cast }: { cast: Cast }) {
           <ToastAction
             altText="View post"
             onClick={() => {
-              window.open(
-                `https://warpcast.com/~/conversations/${response.hash}`,
-                '_blank'
-              )
+              const hash = response.find((r) => r.hash)?.hash
+              window.open(`https://warpcast.com/~/conversations/${hash}`, '_blank')
             }}
           >
             View on Warpcast
@@ -512,9 +547,14 @@ function LaunchButton({ cast }: { cast: Cast }) {
   })
 
   const handleLaunch = async () => {
-    await performAction(LAUNCH_ACTION_ID, {
-      hash: cast.hash,
-    })
+    await performAction([
+      {
+        actionId: COPY_TO_ANONFUN_ACTION_ID,
+        data: {
+          hash: cast.hash,
+        },
+      },
+    ])
     setOpen(false)
   }
 

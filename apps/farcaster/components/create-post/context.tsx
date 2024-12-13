@@ -1,12 +1,11 @@
 'use client'
 
 import { useToast } from '@/lib/hooks/use-toast'
-import { Cast, Channel } from '@anonworld/react'
+import { Cast, Channel, ExecuteActionsStatus, useExecuteActions } from '@anonworld/react'
 import { useRouter } from 'next/navigation'
 import { createContext, useContext, useState, ReactNode } from 'react'
 import { hashMessage } from 'viem'
-import { CREATE_ACTION_ID } from '@/lib/utils'
-import { PerformActionStatus, usePerformAction } from '@anonworld/react'
+import { POST_TO_RAWANON_ACTION_ID } from '@/lib/utils'
 import sdk from '@farcaster/frame-sdk'
 
 interface CreatePostContextProps {
@@ -24,7 +23,7 @@ interface CreatePostContextProps {
   setParent: (parent: Cast | null) => void
   createPost: () => Promise<void>
   embedCount: number
-  status: PerformActionStatus
+  status: ExecuteActionsStatus
   confetti: boolean
   setConfetti: (confetti: boolean) => void
   revealPhrase: string | null
@@ -55,9 +54,10 @@ export const CreatePostProvider = ({
     initialVariant || 'anoncast'
   )
   const router = useRouter()
-  const { performAction, status } = usePerformAction({
+  const { executeActions: performAction, status } = useExecuteActions({
     onSuccess: (response) => {
-      sdk.actions.openUrl(`https://warpcast.com/~/conversations/${response.hash}`)
+      const hash = response.find((r) => r.hash)?.hash
+      sdk.actions.openUrl(`https://warpcast.com/~/conversations/${hash}`)
       sdk.actions.close()
     },
     onError: (error) => {
@@ -72,18 +72,24 @@ export const CreatePostProvider = ({
   const createPost = async () => {
     const data = {
       text: text ?? undefined,
-      embeds: [image, embed].filter((e) => e !== null) as string[],
+      embeds: embed ? [embed] : undefined,
+      images: image ? [image] : undefined,
       quote: quote?.hash,
       channel: channel?.id,
       parent: parent?.hash,
     }
 
-    await performAction(CREATE_ACTION_ID, {
-      ...data,
-      revealHash: revealPhrase
-        ? hashMessage(JSON.stringify(data) + revealPhrase)
-        : undefined,
-    })
+    await performAction([
+      {
+        actionId: POST_TO_RAWANON_ACTION_ID,
+        data: {
+          ...data,
+          revealHash: revealPhrase
+            ? hashMessage(JSON.stringify(data) + revealPhrase)
+            : undefined,
+        },
+      },
+    ])
   }
 
   const embedCount = [image, embed, quote].filter((e) => e !== null).length

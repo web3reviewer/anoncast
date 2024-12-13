@@ -1,10 +1,12 @@
 import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 
-export const DELETE_ACTION_ID = 'd4890070-d70f-4bfe-9c37-863ab9608205'
-export const PROMOTE_ACTION_ID = '083ca1d2-b661-4465-b025-3dd8a18532f6'
-export const LAUNCH_ACTION_ID = 'ab637e2e-2ab1-4708-90a9-942b2505fe15'
-export const CREATE_ACTION_ID = 'e6138573-7b2f-43ab-b248-252cdf5eaeee'
+export const POST_TO_RAWANON_ACTION_ID = 'e6138573-7b2f-43ab-b248-252cdf5eaeee'
+export const DELETE_FROM_ANONCAST_ACTION_ID = 'd0469704-135a-45bc-b550-6507704a7414'
+export const COPY_TO_ANONCAST_ACTION_ID = 'da7f3e1b-cfaf-4954-9025-d56490dfb0a3'
+export const DELETE_FROM_TWITTER_ACTION_ID = 'd660aef6-5a6b-491e-8437-ab6f58bdddcb'
+export const COPY_TO_TWITTER_ACTION_ID = '6ef8ce32-9322-4550-b9ff-45a27317500a'
+export const COPY_TO_ANONFUN_ACTION_ID = '86a595ac-c4b7-41ff-98f0-7fb9d0bf0d67'
 
 export const TICKER = 'ANON'
 export const TOKEN_ADDRESS = '0x0db510e79909666d6dec7f5e49370838c16d950f'
