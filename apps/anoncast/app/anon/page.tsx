@@ -125,10 +125,10 @@ function BuyBurn() {
 
   return (
     <div className="flex flex-col gap-2 mt-4">
-      <span className="font-bold text-md">Burn $ANON</span>
+      <span className="font-bold text-md">Burn $ANON via @anonfun fees</span>
       <p className="text-sm text-zinc-400">
-        Buy $ANON, using the ETH rewards earned by @anonfun, and burn it. Callable by
-        anyone, at most once per minute, 0.1 ETH at a time.
+        @anonfun ETH rewards are used to buy $ANON on Uniswap and burn it. Anyone can
+        trigger this process, once per minute, 0.1 ETH of rewards at a time.
       </p>
       <p className="text-sm text-zinc-400">You only pay for the gas fees.</p>
       <div className="flex flex-row justify-between mt-2">
