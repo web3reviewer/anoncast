@@ -144,7 +144,13 @@ function BuyBurn() {
       </div>
       <Button
         onClick={handleClick}
-        disabled={isConfirming || timeSinceLastBurn < 60 || timeSinceLastBurn === -1}
+        disabled={
+          isConfirming ||
+          timeSinceLastBurn < 60 ||
+          timeSinceLastBurn === -1 ||
+          !data ||
+          data === BigInt(0)
+        }
       >
         {isConfirming ? (
           <div className="flex flex-row items-center gap-2">
