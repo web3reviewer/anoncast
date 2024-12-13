@@ -32,7 +32,7 @@ export function PostFeed({
     queryFn: async (): Promise<Cast[]> => {
       const response = await sdk.getNewFeed(FID)
       return (response?.data?.data || [])?.filter(
-        ({ text }) => !text.toLowerCase().match(/.*@clanker.*(launch|deploy|make).*/)
+        ({ text }) => !text.match(/.*@clanker.*(launch|deploy|make).*/)
       )
     },
   })

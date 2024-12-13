@@ -67,7 +67,7 @@ export function Post({
     (child) => child.target === 'farcaster' && Number(child.targetAccount) === LAUNCH_FID
   )
   const unableToPromoteRegex = [
-    /.*@clanker.*(launch|deploy|make).*/i,
+    /.*@clanker.*(launch|deploy|make).*/,
     /.*dexscreener.com.*/i,
     /.*dextools.io.*/i,
     /.*0x[a-fA-F0-9]{40}.*/i,
@@ -99,7 +99,7 @@ export function Post({
     balance >= BigInt(LAUNCH_AMOUNT) &&
     !launchChild &&
     variant === 'anonfun' &&
-    cast.text.match(/.*clanker.*(launch|deploy|make).*/)
+    cast.text.match(/.*@clanker.*(launch|deploy|make).*/)
 
   const canReveal = address && !!cast.reveal && !cast.reveal?.phrase
 
