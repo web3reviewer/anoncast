@@ -27,7 +27,7 @@ export class PromotePostAction extends BaseAction<
     if (!this.action.metadata.twitter) return true
 
     const unableToPromoteRegex = [
-      /.*@clanker.*launch.*/i,
+      /.*@clanker.*(launch|deploy).*/i,
       /.*dexscreener.com.*/i,
       /.*dextools.io.*/i,
       /.*0x[a-fA-F0-9]{40}.*/i,
