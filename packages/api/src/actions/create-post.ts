@@ -28,7 +28,7 @@ export type CreatePostData = PostData & {
 
 export class CreatePost extends BaseAction<CreatePostMetadata, CreatePostData> {
   async handle() {
-    const { text, embeds, quote, channel, parent, revealHash } = this.data
+    const { text, embeds, quote, channel, parent, images, revealHash } = this.data
 
     if (text && INVALID_REGEXES.some((regex) => text.match(regex))) {
       return {
@@ -41,6 +41,7 @@ export class CreatePost extends BaseAction<CreatePostMetadata, CreatePostData> {
       fid: this.action.metadata.fid,
       text,
       embeds,
+      images,
       quote,
       channel,
       parent,

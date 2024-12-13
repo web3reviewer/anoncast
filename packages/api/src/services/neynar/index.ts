@@ -104,6 +104,7 @@ class NeynarService {
     fid: number
     text?: string
     embeds?: string[]
+    images?: string[]
     quote?: string
     parent?: string
     channel?: string
@@ -120,6 +121,12 @@ class NeynarService {
       params.embeds?.map((embed) => ({
         url: embed,
       })) ?? []
+
+    for (const image of params.images ?? []) {
+      embeds.push({
+        url: image,
+      })
+    }
 
     if (params.quote) {
       const quote = await this.getCast(params.quote)
