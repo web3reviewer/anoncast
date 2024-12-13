@@ -56,10 +56,9 @@ export const actionsRoutes = createElysia({ prefix: '/actions' })
   .post(
     '/execute',
     async ({ body }) => {
-      const actions = [...body.actions]
-
       const results = []
-      for (const action of actions) {
+      const nextActions: ActionRequest[] = []
+      for (const action of body.actions) {
         try {
           const actionInstance = await getActionInstance(action)
           if (!actionInstance) {
@@ -71,8 +70,22 @@ export const actionsRoutes = createElysia({ prefix: '/actions' })
 
           const nextActions = await actionInstance.next()
           if (nextActions.length > 0) {
-            actions.push(...nextActions)
+            nextActions.push(...nextActions)
           }
+        } catch (error) {
+          results.push({ success: false, error: (error as Error).message })
+        }
+      }
+
+      for (const action of nextActions) {
+        try {
+          const actionInstance = await getActionInstance(action)
+          if (!actionInstance) {
+            throw new Error('Invalid action')
+          }
+
+          const response = await actionInstance.execute(true)
+          results.push(response)
         } catch (error) {
           results.push({ success: false, error: (error as Error).message })
         }

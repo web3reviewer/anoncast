@@ -26,25 +26,21 @@ export abstract class BaseAction<TMetadata = any, TData = any> {
     this.credentials = credentials
   }
 
-  async getMerkleRoots() {
+  async validateRoots() {
     const proofs = this.credentials.map(({ proof }) => ({
       proof: new Uint8Array(proof.proof),
       publicInputs: proof.publicInputs,
     }))
 
-    const roots = []
     for (const proof of proofs) {
       const verified = await merkleMembership.verify(proof)
-      if (verified) {
-        roots.push(proof.publicInputs[0])
+      if (!verified) {
+        throw new Error('Invalid merkle tree root')
       }
+
+      this.roots.push(proof.publicInputs[0])
     }
 
-    return roots
-  }
-
-  async validate() {
-    this.roots = await this.getMerkleRoots()
     if (this.roots.length === 0) {
       throw new Error('Invalid merkle tree root')
     }
@@ -53,16 +49,18 @@ export abstract class BaseAction<TMetadata = any, TData = any> {
     if (rootValidations.length === 0) {
       throw new Error('Invalid merkle tree root')
     }
-
-    // if (
-    //   await redis.actionOccurred(this.action.id, hashMessage(JSON.stringify(this.data)))
-    // ) {
-    //   throw new Error('Action already occurred')
-    // }
   }
 
-  async execute() {
-    await this.validate()
+  async execute(skipMerkleValidation = false) {
+    if (!skipMerkleValidation) {
+      await this.validateRoots()
+    }
+
+    if (
+      await redis.actionOccurred(this.action.id, hashMessage(JSON.stringify(this.data)))
+    ) {
+      throw new Error('Action already occurred')
+    }
 
     try {
       const response = await this.handle()
