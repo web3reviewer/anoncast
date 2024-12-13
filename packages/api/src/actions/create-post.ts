@@ -1,6 +1,12 @@
-import { createPost, createPostCredentials, PostData } from '@anonworld/db'
+import {
+  createPost,
+  createPostCredentials,
+  getActionsForTrigger,
+  PostData,
+} from '@anonworld/db'
 import { neynar } from '../services/neynar'
 import { BaseAction } from './base'
+import { ActionRequest, ActionType } from './types'
 
 const INVALID_REGEXES = [
   // biome-ignore lint/suspicious/noMisleadingCharacterClass: regex
@@ -27,6 +33,8 @@ export type CreatePostData = PostData & {
 }
 
 export class CreatePost extends BaseAction<CreatePostMetadata, CreatePostData> {
+  private hash: string | undefined
+
   async handle() {
     const { text, embeds, quote, channel, parent, images, revealHash } = this.data
 
@@ -60,9 +68,28 @@ export class CreatePost extends BaseAction<CreatePostMetadata, CreatePostData> {
 
     await createPostCredentials(response.cast.hash, this.roots)
 
+    this.hash = response.cast.hash
+
     return {
       success: true,
       hash: response.cast.hash,
     }
+  }
+
+  async next(): Promise<ActionRequest[]> {
+    if (!this.hash) return []
+
+    const actions = await getActionsForTrigger(
+      this.action.id,
+      this.credentials.map((c) => c.id)
+    )
+
+    return actions.map((a) => ({
+      actionId: a.id,
+      data: {
+        hash: this.hash,
+      },
+      credentials: this.credentials,
+    }))
   }
 }

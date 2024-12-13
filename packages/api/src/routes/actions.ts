@@ -7,26 +7,9 @@ import { CopyPostTwitter } from '../actions/copy-post-twitter'
 import { DeletePostTwitter } from '../actions/delete-post-twitter'
 import { DeletePostFarcaster } from '../actions/delete-post-farcaster'
 import { BaseAction } from '../actions/base'
+import { ActionRequest, ActionType } from '../actions/types'
 
-enum ActionType {
-  CREATE_POST = 'CREATE_POST',
-  COPY_POST_TWITTER = 'COPY_POST_TWITTER',
-  COPY_POST_FARCASTER = 'COPY_POST_FARCASTER',
-  DELETE_POST_TWITTER = 'DELETE_POST_TWITTER',
-  DELETE_POST_FARCASTER = 'DELETE_POST_FARCASTER',
-}
-
-async function getActionInstance(request: {
-  data: any
-  credentials: {
-    id: string
-    proof: {
-      proof: number[]
-      publicInputs: string[]
-    }
-  }[]
-  actionId: string
-}) {
+async function getActionInstance(request: ActionRequest) {
   const action = await getAction(request.actionId)
 
   let actionInstance: BaseAction | undefined
@@ -57,43 +40,63 @@ async function getActionInstance(request: {
   return actionInstance
 }
 
-export const actionsRoutes = createElysia({ prefix: '/actions' }).post(
-  '/execute',
-  async ({ body }) => {
-    const results = []
-    for (const action of body.actions) {
-      try {
-        const actionInstance = await getActionInstance(action)
-        if (!actionInstance) {
-          throw new Error('Invalid action')
-        }
-
-        const response = await actionInstance.execute()
-        results.push(response)
-      } catch (error) {
-        results.push({ success: false, error: (error as Error).message })
-      }
+export const actionsRoutes = createElysia({ prefix: '/actions' })
+  .get(
+    '/:actionId',
+    async ({ params }) => {
+      const action = await getAction(params.actionId)
+      return action
+    },
+    {
+      params: t.Object({
+        actionId: t.String(),
+      }),
     }
+  )
+  .post(
+    '/execute',
+    async ({ body }) => {
+      const actions = [...body.actions]
 
-    return { results }
-  },
-  {
-    body: t.Object({
-      actions: t.Array(
-        t.Object({
-          actionId: t.String(),
-          data: t.Any(),
-          credentials: t.Array(
-            t.Object({
-              id: t.String(),
-              proof: t.Object({
-                proof: t.Array(t.Number()),
-                publicInputs: t.Array(t.String()),
-              }),
-            })
-          ),
-        })
-      ),
-    }),
-  }
-)
+      const results = []
+      for (const action of actions) {
+        try {
+          const actionInstance = await getActionInstance(action)
+          if (!actionInstance) {
+            throw new Error('Invalid action')
+          }
+
+          const response = await actionInstance.execute()
+          results.push(response)
+
+          const nextActions = await actionInstance.next()
+          if (nextActions.length > 0) {
+            actions.push(...nextActions)
+          }
+        } catch (error) {
+          results.push({ success: false, error: (error as Error).message })
+        }
+      }
+
+      return { results }
+    },
+    {
+      body: t.Object({
+        actions: t.Array(
+          t.Object({
+            actionId: t.String(),
+            data: t.Any(),
+            credentials: t.Array(
+              t.Object({
+                id: t.String(),
+                proof: t.Object({
+                  proof: t.Array(t.Number()),
+                  publicInputs: t.Array(t.String()),
+                }),
+              })
+            ),
+          })
+        ),
+      }),
+    }
+  )

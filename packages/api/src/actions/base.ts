@@ -1,9 +1,9 @@
 import { merkleMembership } from '@anonworld/zk'
 
-import { ProofData } from '@anonworld/zk'
 import { redis } from '../services/redis'
 import { hashMessage } from 'viem'
 import { Action, logActionExecution, validateMerkleRoots } from '@anonworld/db'
+import { ActionRequest } from './types'
 
 type Credential = {
   id: string
@@ -16,27 +16,30 @@ type Credential = {
 export abstract class BaseAction<TMetadata = any, TData = any> {
   action!: Action<TMetadata>
   data!: TData
-  proofs: ProofData[]
+  credentials: Credential[]
 
   roots: string[] = []
 
   constructor(action: Action, data: TData, credentials: Credential[]) {
     this.action = action as Action<TMetadata>
     this.data = data
-    this.proofs = credentials.map(({ proof }) => ({
-      proof: new Uint8Array(proof.proof),
-      publicInputs: proof.publicInputs,
-    }))
+    this.credentials = credentials
   }
 
   async getMerkleRoots() {
+    const proofs = this.credentials.map(({ proof }) => ({
+      proof: new Uint8Array(proof.proof),
+      publicInputs: proof.publicInputs,
+    }))
+
     const roots = []
-    for (const proof of this.proofs) {
+    for (const proof of proofs) {
       const verified = await merkleMembership.verify(proof)
       if (verified) {
         roots.push(proof.publicInputs[0])
       }
     }
+
     return roots
   }
 
@@ -51,11 +54,11 @@ export abstract class BaseAction<TMetadata = any, TData = any> {
       throw new Error('Invalid merkle tree root')
     }
 
-    if (
-      await redis.actionOccurred(this.action.id, hashMessage(JSON.stringify(this.data)))
-    ) {
-      throw new Error('Action already occurred')
-    }
+    // if (
+    //   await redis.actionOccurred(this.action.id, hashMessage(JSON.stringify(this.data)))
+    // ) {
+    //   throw new Error('Action already occurred')
+    // }
   }
 
   async execute() {
@@ -89,4 +92,8 @@ export abstract class BaseAction<TMetadata = any, TData = any> {
   }
 
   abstract handle(): Promise<any>
+
+  async next(): Promise<ActionRequest[]> {
+    return []
+  }
 }

@@ -594,3 +594,13 @@ export type PerformAction = {
   actionId: string
   data: PerformActionData
 }
+
+export type Action = {
+  id: string
+  type: string
+  metadata: unknown
+  created_at: Date
+  updated_at: Date
+  credential_id: string | null
+  trigger: string
+}

@@ -426,7 +426,7 @@ function PromoteButton({ cast }: { cast: Cast }) {
           <ToastAction
             altText="View post"
             onClick={() => {
-              const tweetId = response.find((r) => r.tweetId)?.tweetId
+              const tweetId = response.findLast((r) => r.tweetId)?.tweetId
               window.open(`https://x.com/i/status/${tweetId}`, '_blank')
             }}
           >
@@ -528,7 +528,7 @@ function LaunchButton({ cast }: { cast: Cast }) {
           <ToastAction
             altText="View post"
             onClick={() => {
-              const hash = response.find((r) => r.hash)?.hash
+              const hash = response.findLast((r) => r.hash)?.hash
               window.open(`https://warpcast.com/~/conversations/${hash}`, '_blank')
             }}
           >

@@ -41,10 +41,13 @@ export const useExecuteActions = ({
 
       const formattedActions: PerformAction[] = []
       for (const { actionId, data } of actions) {
-        const credentialId =
-          actionId === 'e6138573-7b2f-43ab-b248-252cdf5eaeee'
-            ? 'erc20-balance:8453:0x0db510e79909666d6dec7f5e49370838c16d950f:5000000000000000000000'
-            : 'erc20-balance:8453:0x0db510e79909666d6dec7f5e49370838c16d950f:2000000000000000000000000'
+        const action = await sdk.getAction(actionId)
+
+        let credentialId = action.data?.credential_id
+        if (!credentialId) {
+          credentialId =
+            'erc20-balance:8453:0x0db510e79909666d6dec7f5e49370838c16d950f:5000000000000000000000'
+        }
 
         let credential = credentials.get(credentialId)
         if (!credential) {
@@ -64,7 +67,7 @@ export const useExecuteActions = ({
 
       const response = await sdk.executeActions(formattedActions)
 
-      if (!response.data?.results[0].success) {
+      if (!response.data?.results?.[0]?.success) {
         throw new Error('Failed to perform actions')
       }
 

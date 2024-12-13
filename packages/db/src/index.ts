@@ -42,6 +42,18 @@ export const getAction = async (actionId: string) => {
   return action
 }
 
+export const getActionsForTrigger = async (trigger: string, credentialIds: string[]) => {
+  return await db
+    .select()
+    .from(actionsTable)
+    .where(
+      and(
+        inArray(actionsTable.credential_id, credentialIds),
+        eq(actionsTable.trigger, trigger)
+      )
+    )
+}
+
 export const getSignerForFid = async (fid: number) => {
   const [signer] = await db
     .select()

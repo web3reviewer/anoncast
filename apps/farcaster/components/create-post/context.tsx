@@ -5,7 +5,7 @@ import { Cast, Channel, ExecuteActionsStatus, useExecuteActions } from '@anonwor
 import { useRouter } from 'next/navigation'
 import { createContext, useContext, useState, ReactNode } from 'react'
 import { hashMessage } from 'viem'
-import { POST_TO_RAWANON_ACTION_ID } from '@/lib/utils'
+import { POST_ACTION_ID } from '@/lib/utils'
 import sdk from '@farcaster/frame-sdk'
 
 interface CreatePostContextProps {
@@ -56,7 +56,7 @@ export const CreatePostProvider = ({
   const router = useRouter()
   const { executeActions: performAction, status } = useExecuteActions({
     onSuccess: (response) => {
-      const hash = response.find((r) => r.hash)?.hash
+      const hash = response.findLast((r) => r.hash)?.hash
       sdk.actions.openUrl(`https://warpcast.com/~/conversations/${hash}`)
       sdk.actions.close()
     },
@@ -81,7 +81,7 @@ export const CreatePostProvider = ({
 
     await performAction([
       {
-        actionId: POST_TO_RAWANON_ACTION_ID,
+        actionId: POST_ACTION_ID,
         data: {
           ...data,
           revealHash: revealPhrase

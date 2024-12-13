@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import { createContext, useContext, useState, ReactNode } from 'react'
 import { hashMessage } from 'viem'
 import { ToastAction } from '../ui/toast'
-import { POST_TO_RAWANON_ACTION_ID } from '@/lib/utils'
+import { POST_ACTION_ID } from '@/lib/utils'
 import { ExecuteActionsStatus, useExecuteActions } from '@anonworld/react'
 
 type Variant = 'anoncast' | 'anonfun' | 'anon'
@@ -71,7 +71,7 @@ export const CreatePostProvider = ({
           <ToastAction
             altText="View post"
             onClick={() => {
-              const hash = response.find((r) => r.hash)?.hash
+              const hash = response.findLast((r) => r.hash)?.hash
               window.open(`https://warpcast.com/~/conversations/${hash}`, '_blank')
             }}
           >
@@ -101,7 +101,7 @@ export const CreatePostProvider = ({
 
     await performAction([
       {
-        actionId: POST_TO_RAWANON_ACTION_ID,
+        actionId: POST_ACTION_ID,
         data: {
           ...data,
           revealHash: revealPhrase

@@ -11,10 +11,9 @@ import {
 export const actionsTable = pgTable('actions', {
   id: uuid('id').defaultRandom().primaryKey(),
   type: varchar({ length: 255 }).notNull(),
-  credential_id: varchar({ length: 255 })
-    .references(() => credentialsTable.id)
-    .notNull(),
+  credential_id: varchar({ length: 255 }).references(() => credentialsTable.id),
   metadata: jsonb('metadata'),
+  trigger: varchar({ length: 255 }).notNull(),
   created_at: timestamp().notNull().defaultNow(),
   updated_at: timestamp().notNull().defaultNow(),
 })

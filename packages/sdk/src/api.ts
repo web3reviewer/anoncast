@@ -1,4 +1,5 @@
 import {
+  Action,
   ApiResponse,
   Cast,
   Channel,
@@ -165,5 +166,9 @@ export class Api {
       body: formData,
       isFormData: true,
     })
+  }
+
+  async getAction(actionId: string) {
+    return await this.request<Action>(`/actions/${actionId}`)
   }
 }
