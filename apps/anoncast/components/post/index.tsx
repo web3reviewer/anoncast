@@ -78,7 +78,7 @@ export function Post({
     address &&
     !!balance &&
     balance >= BigInt(DELETE_AMOUNT) &&
-    (cast.parent || tweetId) &&
+    tweetId &&
     cast.author.fid !== LAUNCH_FID
 
   const canPromote =

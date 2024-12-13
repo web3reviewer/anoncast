@@ -59,13 +59,7 @@ export const augmentCasts = async (casts: Cast[]) => {
           targetAccount: s.target_account,
           targetId: s.target_id,
         })) ?? [],
-      parent: castRelationships?.parent
-        ? {
-            target: castRelationships.parent.target,
-            targetAccount: castRelationships.parent.target_account,
-            targetId: castRelationships.parent.target_id,
-          }
-        : undefined,
+      parent: castRelationships?.parent?.post_hash,
       credentials: castCredentials.map((c) => c.credentials),
     }
   })

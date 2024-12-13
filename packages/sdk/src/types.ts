@@ -519,7 +519,7 @@ export type Cast = {
   reveal?: Reveal
   children: Array<Relationship>
   siblings: Array<Relationship>
-  parent?: Relationship
+  parent?: string
   credentials: Array<Credential>
 }
 
